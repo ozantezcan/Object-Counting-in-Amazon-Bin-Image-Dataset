@@ -2,6 +2,7 @@ from __future__ import print_function, division
 
 import torch
 from torch.autograd import Variable
+import torch.nn as nn
 import numpy as np
 import matplotlib.pyplot as plt
 import time
@@ -35,6 +36,7 @@ def imshow(inp, title=None):
 def train_model(model, criterion, optimizer, lr_scheduler,dset_loaders,\
 dset_sizes,writer,use_gpu=True, num_epochs=25,batch_size=4,num_log=100,\
 init_lr=0.001,lr_decay_epoch=7,multilabel=False,multi_prob=False,mse_loss=False,
+cross_loss=1.,multi_loss=0.,
 numOut=6, logname='logs.xlsx', iter_loc=12):
 
 
@@ -85,6 +87,8 @@ numOut=6, logname='logs.xlsx', iter_loc=12):
 
                 # forward
                 outputs = model(inputs)
+                loss = torch.Tensor(1)
+                loss = 0.0
                 if(mse_loss):
                     #print(labels)
                     tanh_step=torch.nn.Tanh()
@@ -92,12 +96,13 @@ numOut=6, logname='logs.xlsx', iter_loc=12):
                     preds=outputs.data
                     #print(preds)
                     criterion = torch.nn.MSELoss()
-                    loss = criterion(outputs, labels)
+                    loss += criterion(outputs, labels)
                 else:
                     _, preds = torch.max(outputs.data, 1)
-                    if(not multilabel):
-                        loss = criterion(outputs, labels)
-                    else:
+                    if cross_loss>0.:
+                        criterion=nn.CrossEntropyLoss()
+                        loss += cross_loss*criterion(outputs, labels)
+                    if multi_loss>0.:
                         labels_multi=[]
                         for label in labels.data:
                             label_multi=np.zeros(numOut+2)
@@ -114,7 +119,8 @@ numOut=6, logname='logs.xlsx', iter_loc=12):
                             labels_multi.append(label_multi)
 
                         labelsv = Variable(torch.FloatTensor(labels_multi).cuda()).view(-1, numOut)
-                        loss = criterion(outputs, labelsv)
+                        criterion=nn.MultiLabelSoftMarginLoss()
+                        loss += multi_loss*criterion(outputs, labelsv)
 
                 # backward + optimize only if in training phase
                 if phase == 'train':
