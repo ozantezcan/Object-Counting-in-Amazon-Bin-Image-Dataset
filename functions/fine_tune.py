@@ -45,6 +45,7 @@ numOut=6, logname='logs.xlsx', iter_loc=12):
     current_row = sheet.max_row
     since = time.time()
 
+    last_model = model
     best_model = model
     best_rmse = 100.0
 
@@ -185,6 +186,13 @@ numOut=6, logname='logs.xlsx', iter_loc=12):
             print('{} Loss: {:.4f} Acc: {:.4f} CIR-1: {:.4f} RMSE {:.4f}'.format(
                 phase, epoch_loss, epoch_acc, epoch_cir1, epoch_rmse))
 
+            sheet.cell(row=current_row, column=iter_loc+7).value = epoch + 1
+            sheet.cell(row=current_row, column=iter_loc + 8).value = epoch_acc_tr
+            sheet.cell(row=current_row, column=iter_loc + 9).value = epoch_acc
+            sheet.cell(row=current_row, column=iter_loc + 10).value = epoch_rmse_tr
+            sheet.cell(row=current_row, column=iter_loc + 11).value = epoch_rmse
+            last_model = copy.deepcopy(model)
+
             # deep copy the model
             if phase == 'val' and epoch_rmse< best_rmse:
                 best_rmse = epoch_rmse
@@ -204,7 +212,7 @@ numOut=6, logname='logs.xlsx', iter_loc=12):
     print('Training complete in {:.0f}m {:.0f}s'.format(
         time_elapsed // 60, time_elapsed % 60))
     print('Best val RMSE: {:4f}'.format(best_rmse))
-    return best_model
+    return best_model, last_model
 
 def train_model_balanced(model, criterion, optimizer, lr_scheduler,dset_loaders,\
                          dset_sizes,writer,use_gpu=True, num_epochs=25,batch_size=4,\
