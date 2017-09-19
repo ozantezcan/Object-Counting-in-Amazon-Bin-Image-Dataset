@@ -9,19 +9,7 @@ import time
 import copy
 import openpyxl
 
-
-def make_weights_for_balanced_classes(images, nclasses):
-    '''
-    Creates a weight vector which can be used in a weighted sampler functionfor creating balanced batches.
-
-    :param images: Images taken from an ImageFolder object
-    :param nclasses: Number of classes
-
-    :return:
-    :weight: Vector for weights
-    :weight_per_class: Weights for classes
-    '''
-
+def make_weights_for_balanced_classes(images, nclasses):                        
     count = [0] * nclasses                                                      
     for item in images:                                                         
         count[item[1]] += 1                                                     
