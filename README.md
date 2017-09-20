@@ -4,7 +4,7 @@ Mustafa Ozan Tezcan
 
 Professor Janusz Konrad
 
-##Dependencies
+## Dependencies
 The code was written with Python 3.6. The libraies we used are 
 
 [PyTorch](http://pytorch.org/)
