@@ -43,18 +43,15 @@ information about the distance between numbers to the network. For example the n
 will see lots of examples with includes labels 1, 2, and 3 at the same time, however it won't
 see any example which includes labels 1, 3, and 5 at the same time. With this labeling
 we used Multi-label Soft Margin loss function from 
-[torch.nn](http://pytorch.org/docs/master/nn.html). This loss is defined as 
-
-'(loss(x, y) = sum_ij(max(0, 1 - (x[y[j]] - x[i]))) / x.size(0))'
-
-where y is the ground truth and x is the predicted labels.
+[torch.nn](http://pytorch.org/docs/master/nn.html). 
 
 In contrast to the single-label, the multi-label approach is well suited for the RMSE metric, 
 but it is not appropriate for the CCR metric. For performing well on both of the metrics, we 
 decided to use a linear combination of single-label and multi-label loss functions.
 
-'(1-a)*loss_single-label(x,y) + a*loss_multi-label(x,y)'
+![Network](pictures/loss.png)
 
+Here ![lambda](pictures/lambda.png) can be thought as a regularization parameter.
 The overall architecture of the network is the following
 
 ![Network](pictures/network.png)
@@ -68,4 +65,9 @@ notebook file. It uses the functions defined in
 folder. For the instructions about how to run it, please follow the steps in the notebook file.
 
 ## Results
-The results will be published soon.
+At first we used only 10.000 examples to do quick cross-validation and decide on the best set of 
+parameters. As a result we achieved the best results with a stochastic gradient descent with decaying learning rate
+which starts from 0.01 and drops by 1/10 after every 10 epochs and a momentum of 0.9.
+
+Below plots shows the performance with different regularization coefficients.
+![Network](pictures/ARC_moderate_challange_readme.eps)
