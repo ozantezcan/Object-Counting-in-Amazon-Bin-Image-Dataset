@@ -71,4 +71,4 @@ which starts from 0.01 and drops by 1/10 after every 10 epochs and a momentum of
 
 Below plots shows the performance with different regularization coefficients.
 
-![Network](pictures/ARC_moderate_challange_readme.eps)
+![Network](pictures/ARC_moderate_challange_readme.png)
