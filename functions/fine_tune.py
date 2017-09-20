@@ -45,7 +45,7 @@ def imshow(inp, title=None):
         plt.title(title)
     plt.pause(0.001)  # pause a bit so that plots are updated
 
-def train_model(model, criterion, optimizer, lr_scheduler,dset_loaders,\
+def train_model(model, optimizer, lr_scheduler,dset_loaders,\
 dset_sizes,writer,use_gpu=True, num_epochs=25,batch_size=4,num_log=100,\
 init_lr=0.001,lr_decay_epoch=7,multilabel=False,multi_prob=False,mse_loss=False,
 cross_loss=1.,multi_loss=0.,
