@@ -3,7 +3,8 @@
 Mustafa Ozan Tezcan
 
 Professor Janusz Konrad
-##Dependincies
+
+##Dependencies
 The code was written with Python 3.6. The libraies we used are 
 
 [PyTorch](http://pytorch.org/)
@@ -71,4 +72,4 @@ which starts from 0.01 and drops by 1/10 after every 10 epochs and a momentum of
 
 Below plots shows the performance with different regularization coefficients.
 
-![Network](pictures/ARC_moderate_challange_readme.png)
+![Network](pictures/ARC_moderate_challange.png)
