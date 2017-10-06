@@ -47,7 +47,7 @@ def imshow(inp, title=None):
 
 def train_model(model, optimizer, lr_scheduler,dset_loaders,\
 dset_sizes,writer,use_gpu=True, num_epochs=25,batch_size=4,num_log=100,\
-init_lr=0.001,lr_decay_epoch=7,multilabel=False,multi_prob=False,mse_loss=False,
+init_lr=0.001,lr_decay_epoch=7,multi_prob=False,mse_loss=False,
 cross_loss=1.,multi_loss=0.,
 numOut=6, logname='logs.xlsx', iter_loc=12):
 
@@ -113,8 +113,26 @@ numOut=6, logname='logs.xlsx', iter_loc=12):
                 else:
                     _, preds = torch.max(outputs.data, 1)
                     if cross_loss>0.:
-                        criterion=nn.CrossEntropyLoss()
-                        loss += cross_loss*criterion(outputs, labels)
+                        '''criterion=nn.CrossEntropyLoss()
+                        loss += cross_loss*criterion(outputs, labels)'''
+                        criterion = nn.KLDivLoss()
+                        labels_multi = []
+                        for label in labels.data:
+                            label_multi = np.zeros(numOut + 2)
+
+                            label_multi[label] = .3
+                            label_multi[label + 1] = 1
+                            label_multi[label + 2] = .3
+
+                            label_multi = label_multi[1:-1]
+                            label_multi = label_multi/label_multi.sum()
+                            labels_multi.append(label_multi)
+
+                        labelsv = Variable(torch.FloatTensor(labels_multi).cuda()).view(-1, numOut)
+                        #criterion = nn.MultiLabelSoftMarginLoss()
+                        loss += cross_loss * criterion(nn.functional.log_softmax(outputs), labelsv)
+
+
                     if multi_loss>0.:
                         labels_multi=[]
                         for label in labels.data:
