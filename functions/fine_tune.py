@@ -113,9 +113,9 @@ numOut=6, logname='logs.xlsx', iter_loc=12):
                 else:
                     _, preds = torch.max(outputs.data, 1)
                     if cross_loss>0.:
-                        '''criterion=nn.CrossEntropyLoss()
-                        loss += cross_loss*criterion(outputs, labels)'''
-                        criterion = nn.KLDivLoss()
+                        criterion=nn.CrossEntropyLoss()
+                        loss += cross_loss*criterion(outputs, labels)
+                        '''criterion = nn.KLDivLoss()
                         labels_multi = []
                         for label in labels.data:
                             label_multi = np.zeros(numOut + 2)
@@ -130,7 +130,7 @@ numOut=6, logname='logs.xlsx', iter_loc=12):
 
                         labelsv = Variable(torch.FloatTensor(labels_multi).cuda()).view(-1, numOut)
                         #criterion = nn.MultiLabelSoftMarginLoss()
-                        loss += cross_loss * criterion(nn.functional.log_softmax(outputs), labelsv)
+                        loss += cross_loss * criterion(nn.functional.log_softmax(outputs), labelsv)'''
 
 
                     if multi_loss>0.:
