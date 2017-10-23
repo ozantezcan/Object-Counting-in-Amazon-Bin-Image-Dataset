@@ -1,0 +1,14 @@
+Batch size: 32
+Validation size: 1000
+Random seed: 1
+Shuffle: True
+Validation size: 1000
+Network: resnet18
+Criterion: crossentropy
+Learning rate: 0.01
+Momentum: 0.9
+Leraning Rate Scheduler: <function exp_lr_scheduler at 0x7f42d652c9d8>
+Leraning Rate Decay Period: 10
+Network is pretrained: True
+Network laoded from: resnet18_real_sgd_multisoft_August29  19:06:27
+MSE loss function: False
