@@ -52,6 +52,7 @@ cross_loss=1.,multi_loss=0.,
 numOut=6, logname='logs.xlsx', iter_loc=12):
 
 
+    result_log = []
     book = openpyxl.load_workbook(logname)
     sheet = book.active
     current_row = sheet.max_row
@@ -100,6 +101,10 @@ numOut=6, logname='logs.xlsx', iter_loc=12):
 
                 # forward
                 outputs = model(inputs)
+
+                result_log.append((phase, epoch, labels.data.cpu().numpy(), outputs.data.cpu().numpy()))
+
+
                 loss = torch.Tensor(1)
                 loss = 0.0
                 if(mse_loss):
@@ -242,7 +247,7 @@ numOut=6, logname='logs.xlsx', iter_loc=12):
     print('Training complete in {:.0f}m {:.0f}s'.format(
         time_elapsed // 60, time_elapsed % 60))
     print('Best val RMSE: {:4f}'.format(best_rmse))
-    return best_model, last_model
+    return best_model, last_model, result_log
 
 def train_model_balanced(model, criterion, optimizer, lr_scheduler,dset_loaders,\
                          dset_sizes,writer,use_gpu=True, num_epochs=25,batch_size=4,\
