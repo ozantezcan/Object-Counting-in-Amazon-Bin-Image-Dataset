@@ -49,7 +49,8 @@ def train_model(model, optimizer, lr_scheduler,dset_loaders,\
 dset_sizes,writer,use_gpu=True, num_epochs=25,batch_size=4,num_log=100,\
 init_lr=0.001,lr_decay_epoch=7,multi_prob=False,mse_loss=False,
 cross_loss=1.,multi_loss=0.,
-numOut=6, logname='logs.xlsx', iter_loc=12):
+numOut=6, logname='logs.xlsx', iter_loc=12,
+multi_coeff = [1,1,1]):
 
 
     result_log = []
@@ -80,6 +81,7 @@ numOut=6, logname='logs.xlsx', iter_loc=12):
             running_corrects = 0
             running_cir1=0
             running_mse=0.0
+            running_mae = 0.0
             running_hist=np.zeros(numOut)
 
             # Iterate over data.
@@ -102,7 +104,7 @@ numOut=6, logname='logs.xlsx', iter_loc=12):
                 # forward
                 outputs = model(inputs)
 
-                result_log.append((phase, epoch, labels.data.cpu().numpy(), outputs.data.cpu().numpy()))
+                #result_log.append((phase, epoch, labels.data.cpu().numpy(), outputs.data.cpu().numpy()))
 
 
                 loss = torch.Tensor(1)
@@ -139,19 +141,13 @@ numOut=6, logname='logs.xlsx', iter_loc=12):
 
 
                     if multi_loss>0.:
+
                         labels_multi=[]
                         for label in labels.data:
-                            label_multi=np.zeros(numOut+2)
-
-
-                            if(multi_prob):
-                                label_multi[label]=.7
-                                label_multi[label+1]=1
-                                label_multi[label+2]=.7
-                            else:
-                                label_multi[label:label+3]=1
-
-                            label_multi=label_multi[1:-1]
+                            extend = int((len(multi_coeff) - 1) / 2)
+                            label_multi = np.zeros(numOut + 2 * extend)
+                            label_multi[label:label + 2 * extend + 1] = multi_coeff
+                            label_multi = label_multi[extend:-extend]
                             labels_multi.append(label_multi)
 
                         labelsv = Variable(torch.FloatTensor(labels_multi).cuda()).view(-1, numOut)
@@ -166,9 +162,11 @@ numOut=6, logname='logs.xlsx', iter_loc=12):
                         batch_acc = running_corrects / (batch_count*batch_size)
                         batch_cir1 = running_cir1 / (batch_count*batch_size)
                         batch_rmse = np.sqrt(running_mse / (batch_count * batch_size))
+                        batch_mae = running_mae / (batch_count * batch_size)
 
-                        print('{}/{}, acc: {:.4f}, CIR-1: {:.4f}, RMSE: {:.4f}'
-                              .format(batch_count,len(dset_loaders['train']),batch_acc,batch_cir1, batch_rmse))
+                        print('{}/{}, acc: {:.4f}, CIR-1: {:.4f}, RMSE: {:.4f}, MAE: {:.4f}'
+                              .format(batch_count,len(dset_loaders['train']),
+                                      batch_acc,batch_cir1, batch_rmse, batch_mae))
 
                         '''
                         print(preds.cpu().numpy().transpose())
@@ -194,11 +192,13 @@ numOut=6, logname='logs.xlsx', iter_loc=12):
                     #preds_numpy=np.minimum(np.maximum(1,preds_numpy),7)
                     running_cir1 += np.sum(np.abs(preds_numpy - labels_numpy) <= 1)
                     running_mse += np.sum((preds_numpy - labels_numpy) * (preds_numpy - labels_numpy))
+                    running_mae += np.sum(np.abs(preds_numpy - labels_numpy))
                     running_corrects += np.sum(np.abs(preds_numpy - labels_numpy) < .3)
                 else:
                     running_cir1 += torch.sum(torch.abs(preds - labels.data)<=1)
                     running_corrects += torch.sum(preds == labels.data)
                     running_mse += torch.sum((preds - labels.data) * (preds - labels.data))
+                    running_mae += torch.sum(torch.abs(preds - labels.data))
                 for k in range(9):
                     if(torch.sum(labels.data==k)>0):
                         running_hist[k] += torch.sum(torch.abs(preds[labels.data==k] - k)<=1)/torch.sum(labels.data==k)
@@ -207,25 +207,30 @@ numOut=6, logname='logs.xlsx', iter_loc=12):
             epoch_acc = running_corrects / dset_sizes[phase]
             epoch_cir1 = running_cir1 / dset_sizes[phase]
             epoch_rmse = np.sqrt((running_mse / dset_sizes[phase]))
+            epoch_mae = (running_mae / dset_sizes[phase])
             epoch_hist = running_hist
             writer.add_scalar(phase+' loss',epoch_loss,epoch)
             writer.add_scalar(phase+' accuracy',epoch_acc,epoch)
             writer.add_scalar(phase+' CIR-1',epoch_cir1,epoch)
             writer.add_scalar(phase + 'RMSE', epoch_rmse, epoch)
+            writer.add_scalar(phase + 'MAE', epoch_mae, epoch)
             writer.add_histogram(phase+' Histogram',epoch_hist,epoch)
             if phase == 'train':
                 epoch_loss_tr = epoch_loss
                 epoch_acc_tr = epoch_acc
                 epoch_rmse_tr = epoch_rmse
+                epoch_mae_tr = epoch_mae
 
             print('{} Loss: {:.4f} Acc: {:.4f} CIR-1: {:.4f} RMSE {:.4f}'.format(
                 phase, epoch_loss, epoch_acc, epoch_cir1, epoch_rmse))
 
-            sheet.cell(row=current_row, column=iter_loc+7).value = epoch + 1
-            sheet.cell(row=current_row, column=iter_loc + 8).value = epoch_acc_tr
-            sheet.cell(row=current_row, column=iter_loc + 9).value = epoch_acc
-            sheet.cell(row=current_row, column=iter_loc + 10).value = epoch_rmse_tr
-            sheet.cell(row=current_row, column=iter_loc + 11).value = epoch_rmse
+            sheet.cell(row=current_row, column=iter_loc+9).value = epoch + 1
+            sheet.cell(row=current_row, column=iter_loc + 10).value = epoch_acc_tr
+            sheet.cell(row=current_row, column=iter_loc +11).value = epoch_acc
+            sheet.cell(row=current_row, column=iter_loc + 12).value = epoch_rmse_tr
+            sheet.cell(row=current_row, column=iter_loc + 13).value = epoch_rmse
+            sheet.cell(row=current_row, column=iter_loc + 14).value = epoch_mae_tr
+            sheet.cell(row=current_row, column=iter_loc + 15).value = epoch_mae
             last_model = copy.deepcopy(model)
 
             # deep copy the model
@@ -239,6 +244,8 @@ numOut=6, logname='logs.xlsx', iter_loc=12):
                 sheet.cell(row=current_row, column=iter_loc + 4).value = epoch_acc
                 sheet.cell(row=current_row, column=iter_loc + 5).value = epoch_rmse_tr
                 sheet.cell(row=current_row, column=iter_loc + 6).value = epoch_rmse
+                sheet.cell(row=current_row, column=iter_loc + 7).value = epoch_mae_tr
+                sheet.cell(row=current_row, column=iter_loc + 8).value = epoch_mae
                 book.save(logname)
 
         print()
