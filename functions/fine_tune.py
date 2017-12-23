@@ -52,7 +52,7 @@ cross_loss=1.,multi_loss=0.,
 numOut=6, logname='logs.xlsx', iter_loc=12,
 multi_coeff = [1,1,1]):
 
-
+    print('Multi_coef is ' + str(multi_coeff))
     result_log = []
     book = openpyxl.load_workbook(logname)
     sheet = book.active
@@ -147,7 +147,8 @@ multi_coeff = [1,1,1]):
                             extend = int((len(multi_coeff) - 1) / 2)
                             label_multi = np.zeros(numOut + 2 * extend)
                             label_multi[label:label + 2 * extend + 1] = multi_coeff
-                            label_multi = label_multi[extend:-extend]
+                            if extend is not 0:
+                                label_multi = label_multi[extend:-extend]
                             labels_multi.append(label_multi)
 
                         labelsv = Variable(torch.FloatTensor(labels_multi).cuda()).view(-1, numOut)
