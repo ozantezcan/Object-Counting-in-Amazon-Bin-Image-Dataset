@@ -50,7 +50,7 @@ dset_sizes,writer,use_gpu=True, num_epochs=25,batch_size=4,num_log=100,\
 init_lr=0.001,lr_decay_epoch=7,multi_prob=False,mse_loss=False,
 cross_loss=1.,multi_loss=0.,
 numOut=6, logname='logs.xlsx', iter_loc=12,
-multi_coeff = [1,1,1]):
+multi_coeff = [1,1,1], single_coeff = [1, 1, 1]):
 
     print('Multi_coef is ' + str(multi_coeff))
     result_log = []
@@ -120,8 +120,25 @@ multi_coeff = [1,1,1]):
                 else:
                     _, preds = torch.max(outputs.data, 1)
                     if cross_loss>0.:
-                        criterion=nn.CrossEntropyLoss()
-                        loss += cross_loss*criterion(outputs, labels)
+                        labels_multi = []
+                        for label in labels.data:
+                            extend = int((len(single_coeff) - 1) / 2)
+                            label_multi = np.zeros(numOut + 2 * extend)
+                            label_multi[label:label + 2 * extend + 1] = single_coeff
+                            if extend is not 0:
+                                label_multi = label_multi[extend:-extend]
+                                label_multi = label_multi/np.sum(label_multi)
+                                #print('KL divergence labels ' + str(label_multi))
+                            labels_multi.append(label_multi)
+
+                        labelsv = Variable(torch.FloatTensor(labels_multi).cuda()).view(-1, numOut)
+                        log_soft = nn.LogSoftmax()
+                        labelsv = log_soft(labelsv)
+                        criterion = nn.KLDivLoss()
+                        loss += cross_loss * criterion(outputs, labelsv)
+
+                        #criterion=nn.CrossEntropyLoss()
+                        #loss += cross_loss*criterion(outputs, labels)
                         '''criterion = nn.KLDivLoss()
                         labels_multi = []
                         for label in labels.data:
@@ -221,17 +238,21 @@ multi_coeff = [1,1,1]):
                 epoch_acc_tr = epoch_acc
                 epoch_rmse_tr = epoch_rmse
                 epoch_mae_tr = epoch_mae
+                epoch_cir1_tr = epoch_cir1
 
             print('{} Loss: {:.4f} Acc: {:.4f} CIR-1: {:.4f} RMSE {:.4f}'.format(
                 phase, epoch_loss, epoch_acc, epoch_cir1, epoch_rmse))
 
-            sheet.cell(row=current_row, column=iter_loc+9).value = epoch + 1
-            sheet.cell(row=current_row, column=iter_loc + 10).value = epoch_acc_tr
-            sheet.cell(row=current_row, column=iter_loc +11).value = epoch_acc
-            sheet.cell(row=current_row, column=iter_loc + 12).value = epoch_rmse_tr
-            sheet.cell(row=current_row, column=iter_loc + 13).value = epoch_rmse
-            sheet.cell(row=current_row, column=iter_loc + 14).value = epoch_mae_tr
-            sheet.cell(row=current_row, column=iter_loc + 15).value = epoch_mae
+            sheet.cell(row=current_row, column=iter_loc+11).value = epoch + 1
+            sheet.cell(row=current_row, column=iter_loc + 12).value = epoch_acc_tr
+            sheet.cell(row=current_row, column=iter_loc +13).value = epoch_acc
+            sheet.cell(row=current_row, column=iter_loc + 14).value = epoch_rmse_tr
+            sheet.cell(row=current_row, column=iter_loc + 15).value = epoch_rmse
+            sheet.cell(row=current_row, column=iter_loc + 16).value = epoch_mae_tr
+            sheet.cell(row=current_row, column=iter_loc + 17).value = epoch_mae
+            sheet.cell(row=current_row, column=iter_loc + 18).value = epoch_cir1_tr
+            sheet.cell(row=current_row, column=iter_loc + 19).value = epoch_cir1
+            book.save(logname)
             last_model = copy.deepcopy(model)
 
             # deep copy the model
@@ -247,6 +268,8 @@ multi_coeff = [1,1,1]):
                 sheet.cell(row=current_row, column=iter_loc + 6).value = epoch_rmse
                 sheet.cell(row=current_row, column=iter_loc + 7).value = epoch_mae_tr
                 sheet.cell(row=current_row, column=iter_loc + 8).value = epoch_mae
+                sheet.cell(row=current_row, column=iter_loc + 9).value = epoch_cir1_tr
+                sheet.cell(row=current_row, column=iter_loc + 10).value = epoch_cir1
                 book.save(logname)
 
         print()
