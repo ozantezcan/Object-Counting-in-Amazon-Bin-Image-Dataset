@@ -50,7 +50,7 @@ dset_sizes,writer,use_gpu=True, num_epochs=25,batch_size=4,num_log=100,\
 init_lr=0.001,lr_decay_epoch=7,multi_prob=False,mse_loss=False,
 cross_loss=1.,multi_loss=0.,
 numOut=6, logname='logs.xlsx', iter_loc=12,
-multi_coeff = [1,1,1], single_coeff = [1, 1, 1]):
+multi_coeff = [1,1,1], single_coeff = [1, 1, 1], KL = False):
 
     print('Multi_coef is ' + str(multi_coeff))
     result_log = []
@@ -120,25 +120,28 @@ multi_coeff = [1,1,1], single_coeff = [1, 1, 1]):
                 else:
                     _, preds = torch.max(outputs.data, 1)
                     if cross_loss>0.:
-                        labels_multi = []
-                        for label in labels.data:
-                            extend = int((len(single_coeff) - 1) / 2)
-                            label_multi = np.zeros(numOut + 2 * extend)
-                            label_multi[label:label + 2 * extend + 1] = single_coeff
-                            if extend is not 0:
-                                label_multi = label_multi[extend:-extend]
-                                label_multi = label_multi/np.sum(label_multi)
-                                #print('KL divergence labels ' + str(label_multi))
-                            labels_multi.append(label_multi)
+                        if KL:
+                            #print('KL div')
+                            labels_multi = []
+                            for label in labels.data:
+                                extend = int((len(single_coeff) - 1) / 2)
+                                label_multi = np.zeros(numOut + 2 * extend)
+                                label_multi[label:label + 2 * extend + 1] = single_coeff
+                                if extend is not 0:
+                                    label_multi = label_multi[extend:-extend]
+                                    label_multi = label_multi/np.sum(label_multi)
+                                    #print('KL divergence labels ' + str(label_multi))
+                                labels_multi.append(label_multi)
 
-                        labelsv = Variable(torch.FloatTensor(labels_multi).cuda()).view(-1, numOut)
-                        log_soft = nn.LogSoftmax()
-                        labelsv = log_soft(labelsv)
-                        criterion = nn.KLDivLoss()
-                        loss += cross_loss * criterion(outputs, labelsv)
+                            labelsv = Variable(torch.FloatTensor(labels_multi).cuda()).view(-1, numOut)
+                            log_soft = nn.LogSoftmax()
+                            outputs_log_softmax = log_soft(outputs)
+                            criterion = nn.KLDivLoss()
+                            loss += cross_loss * criterion(outputs_log_softmax, labelsv)
+                        else:
+                            criterion=nn.CrossEntropyLoss()
+                            loss += cross_loss*criterion(outputs, labels)
 
-                        #criterion=nn.CrossEntropyLoss()
-                        #loss += cross_loss*criterion(outputs, labels)
                         '''criterion = nn.KLDivLoss()
                         labels_multi = []
                         for label in labels.data:
@@ -158,7 +161,6 @@ multi_coeff = [1,1,1], single_coeff = [1, 1, 1]):
 
 
                     if multi_loss>0.:
-
                         labels_multi=[]
                         for label in labels.data:
                             extend = int((len(multi_coeff) - 1) / 2)
