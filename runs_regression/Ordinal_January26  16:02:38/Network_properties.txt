@@ -1,0 +1,14 @@
+Feature Length: 2
+Number of classes: 9
+Data type: spiral
+Random Noise: 0.1
+Hidden sizes: [4, 4, 4]
+Dropouts: [0.5, 0.5, 0.5]
+Batch size: 64
+Number of samples: 10000
+Optimizer: adam
+Criterion: 1.0xsingle + 0.0Xmulti
+Learning rate: 0.05
+Momentum: 0.9
+Leraning Rate Scheduler: <function exp_lr_scheduler at 0x7f9cd12309d8>
+Leraning Rate Decay Period: 10
