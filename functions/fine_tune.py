@@ -133,7 +133,10 @@ multi_coeff = [1,1,1], single_coeff = [1, 1, 1], KL = False):
                                     #print('KL divergence labels ' + str(label_multi))
                                 labels_multi.append(label_multi)
 
-                            labelsv = Variable(torch.FloatTensor(labels_multi).cuda()).view(-1, numOut)
+                            if use_gpu:
+                                labelsv = Variable(torch.FloatTensor(labels_multi).cuda()).view(-1, numOut)
+                            else:
+                                labelsv = Variable(torch.FloatTensor(labels_multi)).view(-1, numOut)
                             log_soft = nn.LogSoftmax()
                             outputs_log_softmax = log_soft(outputs)
                             criterion = nn.KLDivLoss()
