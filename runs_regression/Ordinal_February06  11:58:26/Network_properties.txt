@@ -1,0 +1,14 @@
+Feature Length: 20
+Number of classes: 10
+Data type: cpu_act
+Random Noise: 0.01
+Hidden sizes: [50, 50, 50]
+Dropouts: [0, 0, 0]
+Batch size: 256
+Number of samples: 10000
+Optimizer: adam
+Criterion: 0.0xsingle + 1.0Xmulti
+Learning rate: 1
+Momentum: 0.9
+Leraning Rate Scheduler: <function exp_lr_scheduler at 0x7fe9798c6d90>
+Leraning Rate Decay Period: 20

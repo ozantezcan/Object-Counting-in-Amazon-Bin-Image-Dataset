@@ -54,9 +54,6 @@ multi_coeff = [1,1,1], single_coeff = [1, 1, 1], KL = False):
 
     print('Multi_coef is ' + str(multi_coeff))
     result_log = []
-    book = openpyxl.load_workbook(logname)
-    sheet = book.active
-    current_row = sheet.max_row
     since = time.time()
 
     last_model = model
@@ -245,8 +242,11 @@ multi_coeff = [1,1,1], single_coeff = [1, 1, 1], KL = False):
                 epoch_mae_tr = epoch_mae
                 epoch_cir1_tr = epoch_cir1
 
-            print('{} Loss: {:.4f} Acc: {:.4f} CIR-1: {:.4f} RMSE {:.4f}'.format(
-                phase, epoch_loss, epoch_acc, epoch_cir1, epoch_rmse))
+            print('{} Loss: {:.4f} Acc: {:.4f} CIR-1: {:.4f} RMSE {:.4f} MAE {:.4f}'.format(
+                phase, epoch_loss, epoch_acc, epoch_cir1, epoch_rmse, epoch_mae))
+            book = openpyxl.load_workbook(logname)
+            sheet = book.active
+            current_row = sheet.max_row
 
             sheet.cell(row=current_row, column=iter_loc+11).value = epoch + 1
             sheet.cell(row=current_row, column=iter_loc + 12).value = epoch_acc_tr
