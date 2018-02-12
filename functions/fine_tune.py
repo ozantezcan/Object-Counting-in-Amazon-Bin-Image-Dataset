@@ -47,10 +47,29 @@ def imshow(inp, title=None):
 
 def train_model(model, optimizer, lr_scheduler,dset_loaders,\
 dset_sizes,writer,use_gpu=True, num_epochs=25,batch_size=4,num_log=100,\
-init_lr=0.001,lr_decay_epoch=7,multi_prob=False,mse_loss=False,
+init_lr=0.001,lr_decay_epoch=7,regression=False, learn_a=False,
 cross_loss=1.,multi_loss=0.,
 numOut=6, logname='logs.xlsx', iter_loc=12,
-multi_coeff = [1,1,1], single_coeff = [1, 1, 1], KL = False):
+multi_coeff = [1,1,1], single_coeff = [1, 1, 1], KL = False,
+algo = None):
+
+    if algo is 'KL':
+        KL = True
+        cross_loss = 1.
+        multi_loss = 0.
+    elif algo is 'softmax':
+        KL = False
+        cross_loss = 1.
+        multi_loss = 0.
+    elif algo is 'sigmoid':
+        cross_loss = 0.
+        multi_loss = 1.
+    elif algo is 'learn_a':
+        print('Algorithm is ' + algo)
+        learn_a = True
+        regression = True
+        cross_loss = 1.
+        multi_loss = 0.
 
     print('Multi_coef is ' + str(multi_coeff))
     result_log = []
@@ -59,6 +78,13 @@ multi_coeff = [1,1,1], single_coeff = [1, 1, 1], KL = False):
     last_model = model
     best_model = model
     best_rmse = 100.0
+
+    if learn_a:
+        if use_gpu:
+            a_vec = Variable(torch.randn(numOut, 1).cuda(), requires_grad=True)
+        else:
+            a_vec = Variable(torch.randn(numOut, 1), requires_grad=True)
+        optimizer.add_param_group({'params': a_vec})
 
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
@@ -70,6 +96,7 @@ multi_coeff = [1,1,1], single_coeff = [1, 1, 1], KL = False):
                 batch_count=0
                 if lr_scheduler is not None:
                     optimizer = lr_scheduler(optimizer, epoch,init_lr=init_lr,lr_decay_epoch=lr_decay_epoch)
+                    #print(optimizer.param_groups)
                 model.train(True)  # Set model to training mode
             else:
                 model.train(False)  # Set model to evaluate mode
@@ -79,14 +106,12 @@ multi_coeff = [1,1,1], single_coeff = [1, 1, 1], KL = False):
             running_cir1=0
             running_mse=0.0
             running_mae = 0.0
-            running_hist=np.zeros(numOut)
-
             # Iterate over data.
             for data in dset_loaders[phase]:
                 # get the inputs
                 inputs, labels = data
-                if(mse_loss):
-                    labels = (labels.type(torch.FloatTensor)-(numOut-1)/2.)/(numOut-1.)*2.
+                #if(regression):
+                #    labels = (labels.type(torch.FloatTensor)-(numOut-1)/2.)/(numOut-1.)*2.
 
                 # wrap them in Variable
                 if use_gpu:
@@ -106,14 +131,27 @@ multi_coeff = [1,1,1], single_coeff = [1, 1, 1], KL = False):
 
                 loss = torch.Tensor(1)
                 loss = 0.0
-                if(mse_loss):
+                if(regression):
                     #print(labels)
-                    tanh_step=torch.nn.Tanh()
-                    outputs=tanh_step(outputs)
-                    preds=outputs.data
-                    #print(preds)
+                    if use_gpu:
+                        labels = labels.type(torch.FloatTensor).cuda()
+                    else:
+                        labels = labels.type(torch.FloatTensor)
+                    softmax_step=torch.nn.Softmax(dim=1)
+                    outputs=softmax_step(outputs)
+
+                    #print(a_vec)
+                    #print(outputs)
+                    preds = torch.mm(outputs, a_vec)
                     criterion = torch.nn.MSELoss()
-                    loss += criterion(outputs, labels)
+                    #print('Preds is ' + str(preds))
+                    #print(labels)
+
+                    if learn_a:
+                        sigmoid_step = torch.nn.Sigmoid()
+                        preds = (numOut-1) * sigmoid_step(preds)
+
+                    loss += criterion(torch.mm(outputs, a_vec), labels)
                 else:
                     _, preds = torch.max(outputs.data, 1)
                     if cross_loss>0.:
@@ -204,10 +242,9 @@ multi_coeff = [1,1,1], single_coeff = [1, 1, 1], KL = False):
                 # statistics
                 running_loss += loss.data[0]
 
-                if(mse_loss):
-
-                    preds_numpy=preds.cpu().numpy()*((numOut-1.)/2.)+((numOut-1.)/2.)
-                    labels_numpy=labels.data.cpu().numpy().reshape(-1,1)*((numOut-1.)/2.)+((numOut-1.)/2.)
+                if(regression):
+                    preds_numpy=preds.data.cpu().numpy()
+                    labels_numpy=labels.data.cpu().numpy()
                     preds_numpy=np.round(preds_numpy)
                     #preds_numpy=np.minimum(np.maximum(1,preds_numpy),7)
                     running_cir1 += np.sum(np.abs(preds_numpy - labels_numpy) <= 1)
@@ -219,22 +256,17 @@ multi_coeff = [1,1,1], single_coeff = [1, 1, 1], KL = False):
                     running_corrects += torch.sum(preds == labels.data)
                     running_mse += torch.sum((preds - labels.data) * (preds - labels.data))
                     running_mae += torch.sum(torch.abs(preds - labels.data))
-                for k in range(9):
-                    if(torch.sum(labels.data==k)>0):
-                        running_hist[k] += torch.sum(torch.abs(preds[labels.data==k] - k)<=1)/torch.sum(labels.data==k)
 
             epoch_loss = running_loss/dset_sizes[phase]
             epoch_acc = running_corrects / dset_sizes[phase]
             epoch_cir1 = running_cir1 / dset_sizes[phase]
             epoch_rmse = np.sqrt((running_mse / dset_sizes[phase]))
             epoch_mae = (running_mae / dset_sizes[phase])
-            epoch_hist = running_hist
             writer.add_scalar(phase+' loss',epoch_loss,epoch)
             writer.add_scalar(phase+' accuracy',epoch_acc,epoch)
             writer.add_scalar(phase+' CIR-1',epoch_cir1,epoch)
             writer.add_scalar(phase + 'RMSE', epoch_rmse, epoch)
             writer.add_scalar(phase + 'MAE', epoch_mae, epoch)
-            writer.add_histogram(phase+' Histogram',epoch_hist,epoch)
             if phase == 'train':
                 epoch_loss_tr = epoch_loss
                 epoch_acc_tr = epoch_acc
@@ -244,6 +276,7 @@ multi_coeff = [1,1,1], single_coeff = [1, 1, 1], KL = False):
 
             print('{} Loss: {:.4f} Acc: {:.4f} CIR-1: {:.4f} RMSE {:.4f} MAE {:.4f}'.format(
                 phase, epoch_loss, epoch_acc, epoch_cir1, epoch_rmse, epoch_mae))
+            print(a_vec.data)
             book = openpyxl.load_workbook(logname)
             sheet = book.active
             current_row = sheet.max_row
