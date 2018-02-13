@@ -65,8 +65,12 @@ algo = None):
         cross_loss = 0.
         multi_loss = 1.
     elif algo is 'learn_a':
-        print('Algorithm is ' + algo)
         learn_a = True
+        regression = True
+        cross_loss = 1.
+        multi_loss = 0.
+    elif algo is 'fix_a':
+        learn_a = False
         regression = True
         cross_loss = 1.
         multi_loss = 0.
@@ -79,12 +83,21 @@ algo = None):
     best_model = model
     best_rmse = 100.0
 
-    if learn_a:
-        if use_gpu:
-            a_vec = Variable(torch.randn(numOut, 1).cuda(), requires_grad=True)
+    if regression:
+        if learn_a:
+            if use_gpu:
+                a_vec = Variable(torch.randn(numOut, 1).cuda(), requires_grad=True)
+            else:
+                a_vec = Variable(torch.randn(numOut, 1), requires_grad=True)
+            params = optimizer.param_groups
+            params[0]['params'].append(a_vec)
+            optimizer.param_groups = params
+            #print(optimizer_ft.param_groups)
         else:
-            a_vec = Variable(torch.randn(numOut, 1), requires_grad=True)
-        optimizer.add_param_group({'params': a_vec})
+            if use_gpu:
+                a_vec = Variable(torch.range(0, numOut - 1).cuda().view(numOut, 1))
+            else:
+                a_vec = Variable(torch.range(0, numOut - 1).view(numOut, 1))
 
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
@@ -97,6 +110,7 @@ algo = None):
                 if lr_scheduler is not None:
                     optimizer = lr_scheduler(optimizer, epoch,init_lr=init_lr,lr_decay_epoch=lr_decay_epoch)
                     #print(optimizer.param_groups)
+                    #print(a_vec.data)
                 model.train(True)  # Set model to training mode
             else:
                 model.train(False)  # Set model to evaluate mode
@@ -151,7 +165,7 @@ algo = None):
                         sigmoid_step = torch.nn.Sigmoid()
                         preds = (numOut-1) * sigmoid_step(preds)
 
-                    loss += criterion(torch.mm(outputs, a_vec), labels)
+                    loss += criterion(preds, labels)
                 else:
                     _, preds = torch.max(outputs.data, 1)
                     if cross_loss>0.:
@@ -225,6 +239,7 @@ algo = None):
                         print('{}/{}, acc: {:.4f}, CIR-1: {:.4f}, RMSE: {:.4f}, MAE: {:.4f}'
                               .format(batch_count,len(dset_loaders['train']),
                                       batch_acc,batch_cir1, batch_rmse, batch_mae))
+                        print(a_vec.data)
 
                         '''
                         print(preds.cpu().numpy().transpose())
@@ -244,12 +259,13 @@ algo = None):
 
                 if(regression):
                     preds_numpy=preds.data.cpu().numpy()
-                    labels_numpy=labels.data.cpu().numpy()
+                    labels_numpy=labels.data.cpu().numpy().reshape(-1, 1)
                     preds_numpy=np.round(preds_numpy)
                     #preds_numpy=np.minimum(np.maximum(1,preds_numpy),7)
                     running_cir1 += np.sum(np.abs(preds_numpy - labels_numpy) <= 1)
                     running_mse += np.sum((preds_numpy - labels_numpy) * (preds_numpy - labels_numpy))
                     running_mae += np.sum(np.abs(preds_numpy - labels_numpy))
+                    #print('Mae is ' + str(running_mae))
                     running_corrects += np.sum(np.abs(preds_numpy - labels_numpy) < .3)
                 else:
                     running_cir1 += torch.sum(torch.abs(preds - labels.data)<=1)
@@ -262,6 +278,7 @@ algo = None):
             epoch_cir1 = running_cir1 / dset_sizes[phase]
             epoch_rmse = np.sqrt((running_mse / dset_sizes[phase]))
             epoch_mae = (running_mae / dset_sizes[phase])
+            #print('Size is ' + str(dset_sizes[phase]))
             writer.add_scalar(phase+' loss',epoch_loss,epoch)
             writer.add_scalar(phase+' accuracy',epoch_acc,epoch)
             writer.add_scalar(phase+' CIR-1',epoch_cir1,epoch)
@@ -276,7 +293,7 @@ algo = None):
 
             print('{} Loss: {:.4f} Acc: {:.4f} CIR-1: {:.4f} RMSE {:.4f} MAE {:.4f}'.format(
                 phase, epoch_loss, epoch_acc, epoch_cir1, epoch_rmse, epoch_mae))
-            print(a_vec.data)
+            #print(a_vec.data)
             book = openpyxl.load_workbook(logname)
             sheet = book.active
             current_row = sheet.max_row
