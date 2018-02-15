@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import time
 import copy
 import openpyxl
+import math
 
 
 def make_weights_for_balanced_classes(images, nclasses):
@@ -51,7 +52,7 @@ init_lr=0.001,lr_decay_epoch=7,regression=False, learn_a=False,
 cross_loss=1.,multi_loss=0.,
 numOut=6, logname='logs.xlsx', iter_loc=12,
 multi_coeff = [1,1,1], single_coeff = [1, 1, 1], KL = False,
-algo = None):
+poisson = False, algo = None):
 
     if algo is 'KL':
         KL = True
@@ -74,6 +75,13 @@ algo = None):
         regression = True
         cross_loss = 1.
         multi_loss = 0.
+    elif algo is 'poisson':
+        KL = True
+        poisson = True
+        cross_loss = 0.
+        multi_loss = 0.
+        multi_coeff = [1]
+        single_coeff = [1]
 
     print('Multi_coef is ' + str(multi_coeff))
     result_log = []
@@ -83,21 +91,32 @@ algo = None):
     best_model = model
     best_rmse = 100.0
 
-    if regression:
-        if learn_a:
-            if use_gpu:
-                a_vec = Variable(torch.randn(numOut, 1).cuda(), requires_grad=True)
-            else:
-                a_vec = Variable(torch.randn(numOut, 1), requires_grad=True)
-            params = optimizer.param_groups
-            params[0]['params'].append(a_vec)
-            optimizer.param_groups = params
-            #print(optimizer_ft.param_groups)
+    if (regression and learn_a) or poisson:
+        if use_gpu:
+            a_vec = Variable(torch.randn(numOut, 1).cuda(), requires_grad=True)
         else:
-            if use_gpu:
-                a_vec = Variable(torch.range(0, numOut - 1).cuda().view(numOut, 1))
-            else:
-                a_vec = Variable(torch.range(0, numOut - 1).view(numOut, 1))
+            a_vec = Variable(torch.randn(numOut, 1), requires_grad=True)
+        params = optimizer.param_groups
+        params[0]['params'].append(a_vec)
+        optimizer.param_groups = params
+        #print(optimizer_ft.param_groups)
+    elif (regression):
+        if use_gpu:
+            a_vec = Variable(torch.range(0, numOut - 1).cuda().view(numOut, 1))
+        else:
+            a_vec = Variable(torch.range(0, numOut - 1).view(numOut, 1))
+
+    if poisson:
+        log_j_fact = np.log(np.asarray([math.factorial(j) for j in range(numOut)]))
+        if use_gpu:
+            ones_vec = Variable(torch.ones(numOut).type(torch.FloatTensor).cuda().view(1, numOut))
+            j_vec = Variable(torch.range(0, numOut-1).type(torch.FloatTensor).cuda().view(1, numOut))
+            log_j_fact = Variable(torch.from_numpy(log_j_fact).type(torch.FloatTensor).cuda().view(1, numOut))
+        else:
+            ones_vec = Variable(torch.ones(numOut).type(torch.FloatTensor).view(1, numOut))
+            j_vec = Variable(torch.range(0, numOut - 1).type(torch.FloatTensor).view(1, numOut))
+            log_j_fact = Variable(torch.from_numpy(log_j_fact).type(torch.FloatTensor).view(1, numOut))
+
 
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
@@ -166,6 +185,42 @@ algo = None):
                         preds = (numOut-1) * sigmoid_step(preds)
 
                     loss += criterion(preds, labels)
+                elif poisson:
+                    # print(labels)
+                    if KL:
+                        # print('KL div')
+                        labels_multi = []
+                        for label in labels.data:
+                            extend = int((len(single_coeff) - 1) / 2)
+                            label_multi = np.zeros(numOut + 2 * extend)
+                            label_multi[label:label + 2 * extend + 1] = single_coeff
+                            if extend is not 0:
+                                label_multi = label_multi[extend:-extend]
+                                label_multi = label_multi / np.sum(label_multi)
+                                # print('KL divergence labels ' + str(label_multi))
+                            labels_multi.append(label_multi)
+
+                        if use_gpu:
+                            labelsv = Variable(torch.FloatTensor(labels_multi).cuda()).view(-1, numOut)
+                        else:
+                            labelsv = Variable(torch.FloatTensor(labels_multi)).view(-1, numOut)
+
+                    sigmoid_step = torch.nn.Sigmoid()
+                    preds =  torch.mm(outputs, a_vec)
+                    preds = (numOut-1) * sigmoid_step(preds)
+                    #print(preds.data.cpu().numpy())
+                    outputs = torch.mm(preds, ones_vec)
+                    outputs = j_vec * torch.log(outputs) - outputs - log_j_fact
+                    #print(outputs)
+
+                    log_soft = nn.LogSoftmax()
+                    outputs_log_softmax = log_soft(outputs)
+                    criterion = nn.KLDivLoss()
+
+                    #print(outputs_softmax)
+                    #print(labelsv)
+                    loss = criterion(outputs_log_softmax, labelsv)
+
                 else:
                     _, preds = torch.max(outputs.data, 1)
                     if cross_loss>0.:
@@ -189,6 +244,9 @@ algo = None):
                             log_soft = nn.LogSoftmax()
                             outputs_log_softmax = log_soft(outputs)
                             criterion = nn.KLDivLoss()
+
+                            #print('Outputs are ' + str(outputs_log_softmax.data.cpu().numpy()[10,:]))
+                            #print('Labels are ' + str(labelsv.cpu().data.numpy()[10,:]))
                             loss += cross_loss * criterion(outputs_log_softmax, labelsv)
                         else:
                             criterion=nn.CrossEntropyLoss()
@@ -257,10 +315,12 @@ algo = None):
                 # statistics
                 running_loss += loss.data[0]
 
-                if(regression):
+                if(regression or poisson):
                     preds_numpy=preds.data.cpu().numpy()
                     labels_numpy=labels.data.cpu().numpy().reshape(-1, 1)
                     preds_numpy=np.round(preds_numpy)
+
+                    #print(preds_numpy[:10])
                     #preds_numpy=np.minimum(np.maximum(1,preds_numpy),7)
                     running_cir1 += np.sum(np.abs(preds_numpy - labels_numpy) <= 1)
                     running_mse += np.sum((preds_numpy - labels_numpy) * (preds_numpy - labels_numpy))
@@ -268,6 +328,7 @@ algo = None):
                     #print('Mae is ' + str(running_mae))
                     running_corrects += np.sum(np.abs(preds_numpy - labels_numpy) < .3)
                 else:
+                    #print(preds)
                     running_cir1 += torch.sum(torch.abs(preds - labels.data)<=1)
                     running_corrects += torch.sum(preds == labels.data)
                     running_mse += torch.sum((preds - labels.data) * (preds - labels.data))
@@ -292,7 +353,9 @@ algo = None):
                 epoch_cir1_tr = epoch_cir1
 
             print('{} Loss: {:.4f} Acc: {:.4f} CIR-1: {:.4f} RMSE {:.4f} MAE {:.4f}'.format(
-                phase, epoch_loss, epoch_acc, epoch_cir1, epoch_rmse, epoch_mae))
+                phase, epoch_loss*1000, epoch_acc, epoch_cir1, epoch_rmse, epoch_mae))
+
+            #print(preds_numpy[:10])
             #print(a_vec.data)
             book = openpyxl.load_workbook(logname)
             sheet = book.active
