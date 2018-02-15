@@ -52,7 +52,7 @@ init_lr=0.001,lr_decay_epoch=7,regression=False, learn_a=False,
 cross_loss=1.,multi_loss=0.,
 numOut=6, logname='logs.xlsx', iter_loc=12,
 multi_coeff = [1,1,1], single_coeff = [1, 1, 1], KL = False,
-poisson = False,binomial = False, algo = None):
+poisson = False, binomial = False, cheng = False, algo = None):
 
     if algo is 'KL':
         KL = True
@@ -85,6 +85,13 @@ poisson = False,binomial = False, algo = None):
     elif algo is 'binomial':
         KL = True
         binomial = True
+        cross_loss = 0.
+        multi_loss = 0.
+        multi_coeff = [1]
+        single_coeff = [1]
+    elif algo is 'cheng':
+        KL = True
+        cheng = True
         cross_loss = 0.
         multi_loss = 0.
         multi_coeff = [1]
@@ -276,6 +283,23 @@ poisson = False,binomial = False, algo = None):
                     # print(labelsv)
                     loss = criterion(outputs_log_softmax, labelsv)
 
+                elif cheng:
+                    if KL:
+                        # print('KL div')
+                        labels_multi = []
+                        for label in labels.data:
+                            label_multi = np.zeros(numOut)
+                            label_multi[:label+1] = 1
+                            labels_multi.append(label_multi)
+
+                        if use_gpu:
+                            labelsv = Variable(torch.FloatTensor(labels_multi).cuda()).view(-1, numOut)
+                        else:
+                            labelsv = Variable(torch.FloatTensor(labels_multi)).view(-1, numOut)
+
+                        criterion = nn.MultiLabelSoftMarginLoss()
+                        loss = criterion(outputs, labelsv)
+
                 else:
                     _, preds = torch.max(outputs.data, 1)
                     if cross_loss>0.:
@@ -370,15 +394,24 @@ poisson = False,binomial = False, algo = None):
                 # statistics
                 running_loss += loss.data[0]
 
-                if(regression or poisson or binomial):
-                    preds_numpy=preds.data.cpu().numpy()
-                    if binomial:
-                        preds_numpy = preds_numpy*(numOut)
+                if(regression or poisson or binomial or cheng):
+                    if cheng:
+                        preds_numpy = (outputs.data.cpu().numpy()>0.5).astype(np.int)
+                        #print(np.cumprod(preds_numpy,axis = 1))
+                        #print(np.sum(np.cumprod(preds_numpy,axis = 1), axis=1))
+                        preds_numpy = (np.sum(np.cumprod(preds_numpy,axis = 1), axis=1)-1).reshape(-1, 1)
+                        #print(preds_numpy)
+                    else:
+                        preds_numpy=preds.data.cpu().numpy()
+                        if binomial:
+                            preds_numpy = preds_numpy*(numOut)
 
-                    labels_numpy=labels.data.cpu().numpy().reshape(-1, 1)
-                    preds_numpy=np.round(preds_numpy)
+                        preds_numpy = np.round(preds_numpy)
+
+                    #print(preds_numpy)
                     preds_numpy[preds_numpy < 0] = 0
                     preds_numpy[preds_numpy > numOut - 1] = numOut - 1
+                    labels_numpy=labels.data.cpu().numpy().reshape(-1, 1)
 
                     #print(preds_numpy[:10])
                     #preds_numpy=np.minimum(np.maximum(1,preds_numpy),7)
@@ -387,6 +420,7 @@ poisson = False,binomial = False, algo = None):
                     running_mae += np.sum(np.abs(preds_numpy - labels_numpy))
                     #print('Mae is ' + str(running_mae))
                     running_corrects += np.sum(np.abs(preds_numpy - labels_numpy) < .3)
+
                 else:
                     #print(preds)
                     running_cir1 += torch.sum(torch.abs(preds - labels.data)<=1)

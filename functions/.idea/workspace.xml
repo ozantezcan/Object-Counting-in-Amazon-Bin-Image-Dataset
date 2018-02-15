@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="BookmarkManager">
-    <bookmark url="file://$PROJECT_DIR$/fine_tune.py" line="111" mnemonic="9" />
+    <bookmark url="file://$PROJECT_DIR$/fine_tune.py" line="118" mnemonic="9" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8290cc2f-d1b3-4ed5-9231-8b76d6f34c43" name="Default" comment="" />
@@ -21,10 +21,14 @@
       <file leaf-file-name="fine_tune.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/fine_tune.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="320">
-              <caret line="381" column="0" lean-forward="true" selection-start-line="381" selection-start-column="0" selection-end-line="381" selection-end-column="0" />
+            <state relative-caret-position="666">
+              <caret line="91" column="23" lean-forward="false" selection-start-line="91" selection-start-column="18" selection-end-line="91" selection-end-column="23" />
               <folding>
                 <element signature="e#0#47#0" expanded="true" />
+                <element signature="e#7295#8082#0" expanded="false" />
+                <element signature="e#8133#9839#0" expanded="false" />
+                <element signature="e#9892#11629#0" expanded="false" />
+                <element signature="e#16025#17244#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -383,10 +387,14 @@
     <entry file="file://$PROJECT_DIR$/../../../downloads/kubra/2generator_v2.py" />
     <entry file="file://$PROJECT_DIR$/fine_tune.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="320">
-          <caret line="381" column="0" lean-forward="true" selection-start-line="381" selection-start-column="0" selection-end-line="381" selection-end-column="0" />
+        <state relative-caret-position="666">
+          <caret line="91" column="23" lean-forward="false" selection-start-line="91" selection-start-column="18" selection-end-line="91" selection-end-column="23" />
           <folding>
             <element signature="e#0#47#0" expanded="true" />
+            <element signature="e#7295#8082#0" expanded="false" />
+            <element signature="e#8133#9839#0" expanded="false" />
+            <element signature="e#9892#11629#0" expanded="false" />
+            <element signature="e#16025#17244#0" expanded="false" />
           </folding>
         </state>
       </provider>
