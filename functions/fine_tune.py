@@ -49,7 +49,7 @@ def imshow(inp, title=None):
 def train_model(model, optimizer, lr_scheduler,dset_loaders,\
 dset_sizes,writer,use_gpu=True, num_epochs=25,batch_size=4,num_log=100,\
 init_lr=0.001,lr_decay_epoch=7,regression=False, learn_a=False,
-cross_loss=1.,multi_loss=0.,
+cross_loss=1.,multi_loss=0., write_log = False,
 numOut=6, logname='logs.xlsx', iter_loc=12,
 multi_coeff = [1,1,1], single_coeff = [1, 1, 1], KL = False,
 poisson = False, binomial = False, cheng = False, algo = None):
@@ -145,8 +145,9 @@ poisson = False, binomial = False, cheng = False, algo = None):
 
 
     for epoch in range(num_epochs):
-        print('Epoch {}/{}'.format(epoch, num_epochs - 1))
-        print('-' * 10)
+        if(write_log):
+            print('Epoch {}/{}'.format(epoch, num_epochs - 1))
+            print('-' * 10)
 
         # Each epoch has a training and validation phase
         for phase in ['train', 'val']:
@@ -196,7 +197,7 @@ poisson = False, binomial = False, cheng = False, algo = None):
                         labels = labels.type(torch.FloatTensor).cuda()
                     else:
                         labels = labels.type(torch.FloatTensor)
-                    softmax_step=torch.nn.Softmax(dim=1)
+                    softmax_step=torch.nn.Softmax()
                     outputs=softmax_step(outputs)
 
                     #print(a_vec)
@@ -373,9 +374,10 @@ poisson = False, binomial = False, cheng = False, algo = None):
                         batch_rmse = np.sqrt(running_mse / (batch_count * batch_size))
                         batch_mae = running_mae / (batch_count * batch_size)
 
-                        print('{}/{}, acc: {:.4f}, CIR-1: {:.4f}, RMSE: {:.4f}, MAE: {:.4f}'
-                              .format(batch_count,len(dset_loaders['train']),
-                                      batch_acc,batch_cir1, batch_rmse, batch_mae))
+                        if(write_log):
+                            print('{}/{}, acc: {:.4f}, CIR-1: {:.4f}, RMSE: {:.4f}, MAE: {:.4f}'
+                                  .format(batch_count,len(dset_loaders['train']),
+                                          batch_acc,batch_cir1, batch_rmse, batch_mae))
                         #print(a_vec.data)
 
                         '''
@@ -445,9 +447,9 @@ poisson = False, binomial = False, cheng = False, algo = None):
                 epoch_rmse_tr = epoch_rmse
                 epoch_mae_tr = epoch_mae
                 epoch_cir1_tr = epoch_cir1
-
-            print('{} Loss: {:.4f} Acc: {:.4f} CIR-1: {:.4f} RMSE {:.4f} MAE {:.4f}'.format(
-                phase, epoch_loss*1000, epoch_acc, epoch_cir1, epoch_rmse, epoch_mae))
+            if(write_log):
+                print('{} Loss: {:.4f} Acc: {:.4f} CIR-1: {:.4f} RMSE {:.4f} MAE {:.4f}'.format(
+                    phase, epoch_loss*1000, epoch_acc, epoch_cir1, epoch_rmse, epoch_mae))
 
             #print(preds_numpy[:10])
             #print(a_vec.data)
@@ -483,13 +485,14 @@ poisson = False, binomial = False, cheng = False, algo = None):
                 sheet.cell(row=current_row, column=iter_loc + 9).value = epoch_cir1_tr
                 sheet.cell(row=current_row, column=iter_loc + 10).value = epoch_cir1
                 book.save(logname)
-
-        print()
+        if(write_log):
+            print()
 
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(
         time_elapsed // 60, time_elapsed % 60))
     print('Best val RMSE: {:4f}'.format(best_rmse))
+
     return best_model, last_model, result_log
 
 def train_model_balanced(model, criterion, optimizer, lr_scheduler,dset_loaders,\
