@@ -52,7 +52,8 @@ init_lr=0.001,lr_decay_epoch=7,regression=False, learn_a=False,
 cross_loss=1.,multi_loss=0., write_log = False,
 numOut=6, logname='logs.xlsx', iter_loc=12,
 multi_coeff = [1,1,1], single_coeff = [1, 1, 1], KL = False,
-poisson = False, binomial = False, cheng = False, algo = None):
+poisson = False, binomial = False, cheng = False, algo = None,
+mae_loss = False):
 
     if algo is 'KL':
         KL = True
@@ -75,6 +76,18 @@ poisson = False, binomial = False, cheng = False, algo = None):
         regression = True
         cross_loss = 1.
         multi_loss = 0.
+    elif algo is 'learn_a_mae':
+        learn_a = True
+        regression = True
+        cross_loss = 1.
+        multi_loss = 0.
+        mae_loss = True
+    elif algo is 'fix_a_mae':
+        learn_a = False
+        regression = True
+        cross_loss = 1.
+        multi_loss = 0.
+        mae_loss = True
     elif algo is 'poisson':
         KL = True
         poisson = True
@@ -116,19 +129,19 @@ poisson = False, binomial = False, cheng = False, algo = None):
         #print(optimizer_ft.param_groups)
     elif (regression):
         if use_gpu:
-            a_vec = Variable(torch.range(0, numOut - 1).cuda().view(numOut, 1))
+            a_vec = Variable(torch.arange(0, numOut).cuda().view(numOut, 1))
         else:
-            a_vec = Variable(torch.range(0, numOut - 1).view(numOut, 1))
+            a_vec = Variable(torch.arange(0, numOut).view(numOut, 1))
 
     if poisson:
         log_j_fact = np.log(np.asarray([math.factorial(j) for j in range(numOut)]))
         if use_gpu:
             ones_vec = Variable(torch.ones(numOut).type(torch.FloatTensor).cuda().view(1, numOut))
-            j_vec = Variable(torch.range(0, numOut-1).type(torch.FloatTensor).cuda().view(1, numOut))
+            j_vec = Variable(torch.arange(0, numOut).type(torch.FloatTensor).cuda().view(1, numOut))
             log_j_fact = Variable(torch.from_numpy(log_j_fact).type(torch.FloatTensor).cuda().view(1, numOut))
         else:
             ones_vec = Variable(torch.ones(numOut).type(torch.FloatTensor).view(1, numOut))
-            j_vec = Variable(torch.range(0, numOut - 1).type(torch.FloatTensor).view(1, numOut))
+            j_vec = Variable(torch.arange(0, numOut).type(torch.FloatTensor).view(1, numOut))
             log_j_fact = Variable(torch.from_numpy(log_j_fact).type(torch.FloatTensor).view(1, numOut))
 
     if binomial:
@@ -136,11 +149,11 @@ poisson = False, binomial = False, cheng = False, algo = None):
                                          (math.factorial(j)*math.factorial(numOut-1-j)) for j in range(numOut)]))
         if use_gpu:
             ones_vec = Variable(torch.ones(numOut).type(torch.FloatTensor).cuda().view(1, numOut))
-            j_vec = Variable(torch.range(0, numOut-1).type(torch.FloatTensor).cuda().view(1, numOut))
+            j_vec = Variable(torch.arange(0, numOut).type(torch.FloatTensor).cuda().view(1, numOut))
             log_j_binom = Variable(torch.from_numpy(log_j_binom).type(torch.FloatTensor).cuda().view(1, numOut))
         else:
             ones_vec = Variable(torch.ones(numOut).type(torch.FloatTensor).view(1, numOut))
-            j_vec = Variable(torch.range(0, numOut - 1).type(torch.FloatTensor).view(1, numOut))
+            j_vec = Variable(torch.arange(0, numOut).type(torch.FloatTensor).view(1, numOut))
             log_j_binom = Variable(torch.from_numpy(log_j_binom).type(torch.FloatTensor).view(1, numOut))
 
 
@@ -203,7 +216,10 @@ poisson = False, binomial = False, cheng = False, algo = None):
                     #print(a_vec)
                     #print(outputs)
                     preds = torch.mm(outputs, a_vec)
-                    criterion = torch.nn.MSELoss()
+                    if(mae_loss):
+                        criterion = torch.nn.L1Loss()
+                    else:
+                        criterion = torch.nn.MSELoss()
                     #print('Preds is ' + str(preds))
                     #print(labels)
 
