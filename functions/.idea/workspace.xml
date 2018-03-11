@@ -21,8 +21,8 @@
       <file leaf-file-name="fine_tune.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/fine_tune.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3050">
-              <caret line="238" column="55" lean-forward="false" selection-start-line="238" selection-start-column="55" selection-end-line="238" selection-end-column="55" />
+            <state relative-caret-position="2365">
+              <caret line="332" column="57" lean-forward="false" selection-start-line="332" selection-start-column="57" selection-end-line="332" selection-end-column="57" />
               <folding>
                 <element signature="e#0#47#0" expanded="true" />
               </folding>
@@ -83,10 +83,10 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="65" />
-    <option name="y" value="-4" />
-    <option name="width" value="1855" />
-    <option name="height" value="1084" />
+    <option name="x" value="1985" />
+    <option name="y" value="52" />
+    <option name="width" value="1215" />
+    <option name="height" value="1028" />
   </component>
   <component name="ProjectView">
     <navigator currentView="ProjectPane" proportions="" version="1">
@@ -230,7 +230,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="65" y="-4" width="1855" height="1084" extended-state="7" />
+    <frame x="1985" y="52" width="1215" height="1028" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3144033" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -385,8 +385,8 @@
     <entry file="file://$PROJECT_DIR$/../../../downloads/kubra/2generator_v2.py" />
     <entry file="file://$PROJECT_DIR$/fine_tune.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3050">
-          <caret line="238" column="55" lean-forward="false" selection-start-line="238" selection-start-column="55" selection-end-line="238" selection-end-column="55" />
+        <state relative-caret-position="2365">
+          <caret line="332" column="57" lean-forward="false" selection-start-line="332" selection-start-column="57" selection-end-line="332" selection-end-column="57" />
           <folding>
             <element signature="e#0#47#0" expanded="true" />
           </folding>

@@ -110,7 +110,7 @@ mae_loss = False):
         multi_coeff = [1]
         single_coeff = [1]
 
-    print('Multi_coef is ' + str(multi_coeff))
+    #print('Multi_coef is ' + str(multi_coeff))
     result_log = []
     since = time.time()
 
@@ -324,14 +324,14 @@ mae_loss = False):
                             #print('KL div')
                             labels_multi = []
                             for label in labels.data:
-                                extend = int((len(single_coeff) - 1) / 2)
+                                '''extend = int((len(single_coeff) - 1) / 2)
                                 label_multi = np.zeros(numOut + 2 * extend)
                                 label_multi[label:label + 2 * extend + 1] = single_coeff
                                 if extend is not 0:
                                     label_multi = label_multi[extend:-extend]
                                     label_multi = label_multi/np.sum(label_multi)
-                                    #print('KL divergence labels ' + str(label_multi))
-                                labels_multi.append(label_multi)
+                                    #print('KL divergence labels ' + str(label_multi))'''
+                                labels_multi.append(single_coeff[label, :])
 
                             if use_gpu:
                                 labelsv = Variable(torch.FloatTensor(labels_multi).cuda()).view(-1, numOut)
@@ -369,12 +369,12 @@ mae_loss = False):
                     if multi_loss>0.:
                         labels_multi=[]
                         for label in labels.data:
-                            extend = int((len(multi_coeff) - 1) / 2)
+                            '''extend = int((len(multi_coeff) - 1) / 2)
                             label_multi = np.zeros(numOut + 2 * extend)
                             label_multi[label:label + 2 * extend + 1] = multi_coeff
                             if extend is not 0:
-                                label_multi = label_multi[extend:-extend]
-                            labels_multi.append(label_multi)
+                                label_multi = label_multi[extend:-extend]'''
+                            labels_multi.append(multi_coeff[label,:])
 
                         labelsv = Variable(torch.FloatTensor(labels_multi).cuda()).view(-1, numOut)
                         criterion=nn.MultiLabelSoftMarginLoss()
