@@ -374,8 +374,44 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
                             print('labelsv is ' + str(labelsv))
                             print('kl is ' + str(loss))'''
                     if cross_loss > 0.:
-                        criterion = nn.CrossEntropyLoss()
-                        loss += cross_loss * criterion(outputs, labels)
+                        _, preds = torch.max(outputs.data, 1)
+                        if cross_loss > 0.:
+                            if KL:
+                                # print('KL div')
+                                labels_multi = []
+                                for label in labels.data:
+                                    '''extend = int((len(single_coeff) - 1) / 2)
+                                    label_multi = np.zeros(numOut + 2 * extend)
+                                    label_multi[label:label + 2 * extend + 1] = single_coeff
+                                    if extend is not 0:
+                                        label_multi = label_multi[extend:-extend]
+                                        label_multi = label_multi/np.sum(label_multi)
+                                        #print('KL divergence labels ' + str(label_multi))'''
+                                    labels_multi.append(single_coeff[label, :])
+
+                                if use_gpu:
+                                    labelsv = Variable(torch.FloatTensor(labels_multi).cuda()).view(-1, numOut)
+                                else:
+                                    labelsv = Variable(torch.FloatTensor(labels_multi)).view(-1, numOut)
+
+                                log_soft = nn.LogSoftmax()
+                                outputs_log_softmax = log_soft(outputs)
+                                criterion = nn.KLDivLoss()
+
+                                # print('Outputs are ' + str(outputs_log_softmax.data.cpu().numpy()[10,:]))
+                                # print('Labels are ' + str(labelsv.cpu().data.numpy()[10,:]))
+                                loss += cross_loss * criterion(outputs_log_softmax, labelsv)
+
+                                '''print('outputs is ' + str(outputs))
+                                print('outputs_log_softmax is '+str(outputs_log_softmax))
+                                print('outputs_log_softmax2 is ' + str(outputs_log_softmax2))
+                                print('labelsv is ' + str(labelsv))
+                                print('kl is ' + str(loss))'''
+
+                            else:
+                                criterion = nn.CrossEntropyLoss()
+                                loss += cross_loss * criterion(outputs, labels)
+
 
                 else:
                     _, preds = torch.max(outputs.data, 1)
