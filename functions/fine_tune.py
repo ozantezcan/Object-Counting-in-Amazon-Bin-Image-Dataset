@@ -113,8 +113,8 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
     elif algo is 'weighted_softmax':
         weighted_softmax = True
         KL = True
-        cross_loss = 1.
-        multi_loss = 0.
+        #cross_loss = 1.
+        #multi_loss = 0.
 
     # print('Multi_coef is ' + str(multi_coeff))
     result_log = []
@@ -343,6 +343,7 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
                         loss = criterion(outputs, labelsv)
                 elif weighted_softmax:
                     _, preds = torch.max(outputs.data, 1)
+                    #print('Multi loss is ' + str(multi_loss))
                     if multi_loss > 0.:
                         if KL:
                             # print('KL div')
@@ -367,8 +368,8 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
 
                             # print('Outputs are ' + str(outputs_log_softmax.data.cpu().numpy()[10,:]))
                             # print('Labels are ' + str(labelsv.cpu().data.numpy()[10,:]))
-                            loss += multi_loss * criterion(outputs_log_softmax, labelsv)
-
+                            loss += multi_loss * (numOut-1) * criterion(outputs_log_softmax, labelsv)
+                            #print('MAE loss is ' + str(criterion(numOut* outputs_log_softmax, labelsv)))
                             '''print('outputs is ' + str(outputs))
                             print('outputs_log_softmax is '+str(outputs_log_softmax))
                             print('labelsv is ' + str(labelsv))
@@ -401,6 +402,7 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
                                 # print('Outputs are ' + str(outputs_log_softmax.data.cpu().numpy()[10,:]))
                                 # print('Labels are ' + str(labelsv.cpu().data.numpy()[10,:]))
                                 loss += cross_loss * criterion(outputs_log_softmax, labelsv)
+                                #print('CCR loss is ' + str(criterion(outputs_log_softmax, labelsv)))
 
                                 '''print('outputs is ' + str(outputs))
                                 print('outputs_log_softmax is '+str(outputs_log_softmax))

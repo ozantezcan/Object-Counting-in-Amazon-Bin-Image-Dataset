@@ -12,7 +12,6 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FavoritesManager">
     <favorites_list name="functions" />
   </component>
@@ -21,14 +20,14 @@
       <file leaf-file-name="fine_tune.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/fine_tune.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-8">
-              <caret line="402" column="32" lean-forward="true" selection-start-line="402" selection-start-column="32" selection-end-line="402" selection-end-column="32" />
+            <state relative-caret-position="258">
+              <caret line="345" column="21" lean-forward="false" selection-start-line="345" selection-start-column="21" selection-end-line="345" selection-end-column="21" />
               <folding>
                 <element signature="e#0#47#0" expanded="true" />
-                <element signature="e#8521#9433#0" expanded="false" />
-                <element signature="e#9484#11193#0" expanded="false" />
-                <element signature="e#11246#12991#0" expanded="false" />
-                <element signature="e#13041#13751#0" expanded="false" />
+                <element signature="e#8523#9435#0" expanded="false" />
+                <element signature="e#9486#11195#0" expanded="false" />
+                <element signature="e#11248#12993#0" expanded="false" />
+                <element signature="e#13043#13753#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -66,6 +65,7 @@
       <find>rand</find>
       <find>fix</find>
       <find>learn_a</find>
+      <find>multi_loss</find>
     </findStrings>
     <replaceStrings>
       <replace>/n</replace>
@@ -86,7 +86,7 @@
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds">
+  <component name="ProjectFrameBounds" fullScreen="true">
     <option name="x" value="64" />
     <option name="y" value="-11" />
     <option name="width" value="1857" />
@@ -217,7 +217,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="64" y="-11" width="1857" height="1092" extended-state="6" />
+    <frame x="0" y="0" width="1440" height="900" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3144033" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -372,14 +372,14 @@
     <entry file="file://$PROJECT_DIR$/../../../downloads/kubra/2generator_v2.py" />
     <entry file="file://$PROJECT_DIR$/fine_tune.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-8">
-          <caret line="402" column="32" lean-forward="true" selection-start-line="402" selection-start-column="32" selection-end-line="402" selection-end-column="32" />
+        <state relative-caret-position="258">
+          <caret line="345" column="21" lean-forward="false" selection-start-line="345" selection-start-column="21" selection-end-line="345" selection-end-column="21" />
           <folding>
             <element signature="e#0#47#0" expanded="true" />
-            <element signature="e#8521#9433#0" expanded="false" />
-            <element signature="e#9484#11193#0" expanded="false" />
-            <element signature="e#11246#12991#0" expanded="false" />
-            <element signature="e#13041#13751#0" expanded="false" />
+            <element signature="e#8523#9435#0" expanded="false" />
+            <element signature="e#9486#11195#0" expanded="false" />
+            <element signature="e#11248#12993#0" expanded="false" />
+            <element signature="e#13043#13753#0" expanded="false" />
           </folding>
         </state>
       </provider>
