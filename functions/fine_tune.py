@@ -368,7 +368,7 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
 
                             # print('Outputs are ' + str(outputs_log_softmax.data.cpu().numpy()[10,:]))
                             # print('Labels are ' + str(labelsv.cpu().data.numpy()[10,:]))
-                            loss += multi_loss * (numOut-1) * criterion(outputs_log_softmax, labelsv)
+                            loss += (multi_loss * (numOut-1) * criterion(outputs_log_softmax, labelsv))/3.0
                             #print('MAE loss is ' + str(criterion(numOut* outputs_log_softmax, labelsv)))
                             '''print('outputs is ' + str(outputs))
                             print('outputs_log_softmax is '+str(outputs_log_softmax))
