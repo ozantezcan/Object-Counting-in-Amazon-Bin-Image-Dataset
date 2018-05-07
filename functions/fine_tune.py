@@ -490,10 +490,14 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
                     batch_count += 1
                     if (np.mod(batch_count, num_log) == 0):
                         # batch_loss = running_loss / (batch_count*batch_size)
-                        batch_acc = running_corrects / (batch_count * batch_size)
-                        batch_cir1 = running_cir1 / (batch_count * batch_size)
-                        batch_rmse = np.sqrt(running_mse / (batch_count * batch_size))
-                        batch_mae = running_mae / (batch_count * batch_size)
+                        batch_acc = float(running_corrects) / float(batch_count * batch_size)
+                        batch_cir1 = float(running_cir1) / float(batch_count * batch_size)
+                        batch_rmse = np.sqrt(float(running_mse) / float(batch_count * batch_size))
+                        batch_mae = float(running_mae) / float(batch_count * batch_size)
+
+                        '''print('Running corrects is ' + str(running_corrects))
+                        print('Numper of smaples is' + str((batch_count * batch_size)))
+                        print('Batch accuracy is ' + str(batch_acc))'''
 
                         if (write_log):
                             print('{}/{}, acc: {:.4f}, CIR-1: {:.4f}, RMSE: {:.4f}, MAE: {:.4f}'
@@ -551,12 +555,14 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
                     running_mse += torch.sum((preds - labels.data) * (preds - labels.data))
                     running_mae += torch.sum(torch.abs(preds - labels.data))
 
-            epoch_loss = running_loss / dset_sizes[phase]
-            epoch_acc = running_corrects / dset_sizes[phase]
-            epoch_cir1 = running_cir1 / dset_sizes[phase]
-            epoch_rmse = np.sqrt((running_mse / dset_sizes[phase]))
-            epoch_mae = (running_mae / dset_sizes[phase])
+            epoch_loss = float(running_loss) / float(dset_sizes[phase])
+            epoch_acc = float(running_corrects) / float(dset_sizes[phase])
+            epoch_cir1 = float(running_cir1) / float(dset_sizes[phase])
+            epoch_rmse = np.sqrt((float(running_mse) / float(dset_sizes[phase])))
+            epoch_mae = float(running_mae) / float(dset_sizes[phase])
             # print('Size is ' + str(dset_sizes[phase]))
+            print('Epoch is ' + str(epoch))
+            print('Epoch loss is ' + str(epoch_loss))
             writer.add_scalar(phase + ' loss', epoch_loss, epoch)
             writer.add_scalar(phase + ' accuracy', epoch_acc, epoch)
             writer.add_scalar(phase + ' CIR-1', epoch_cir1, epoch)

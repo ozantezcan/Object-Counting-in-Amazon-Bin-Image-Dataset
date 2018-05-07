@@ -21,10 +21,22 @@
       <file leaf-file-name="fine_tune.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/fine_tune.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="276">
-              <caret line="364" column="38" lean-forward="false" selection-start-line="364" selection-start-column="38" selection-end-line="364" selection-end-column="38" />
+            <state relative-caret-position="251">
+              <caret line="54" column="59" lean-forward="true" selection-start-line="54" selection-start-column="59" selection-end-line="54" selection-end-column="59" />
               <folding>
                 <element signature="e#0#47#0" expanded="true" />
+                <element signature="e#3582#3925#0" expanded="false" />
+                <element signature="e#3957#4129#0" expanded="false" />
+                <element signature="e#4155#4865#0" expanded="false" />
+                <element signature="e#4892#5712#0" expanded="false" />
+                <element signature="e#5747#6714#0" expanded="false" />
+                <element signature="e#8523#9435#0" expanded="false" />
+                <element signature="e#9486#11195#0" expanded="false" />
+                <element signature="e#11248#12993#0" expanded="false" />
+                <element signature="e#13043#13753#0" expanded="false" />
+                <element signature="e#13813#18255#0" expanded="false" />
+                <element signature="e#18437#20289#0" expanded="false" />
+                <element signature="e#21363#22094#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -34,8 +46,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>copy</find>
-      <find>cross</find>
       <find>KLD</find>
       <find>result_log</find>
       <find>train_loader</find>
@@ -63,6 +73,9 @@
       <find>fix</find>
       <find>learn_a</find>
       <find>multi_loss</find>
+      <find>num_log</find>
+      <find>exp_lr_sc</find>
+      <find>lr_sche</find>
     </findStrings>
     <replaceStrings>
       <replace>/n</replace>
@@ -84,10 +97,10 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="64" />
-    <option name="y" value="-11" />
-    <option name="width" value="1857" />
-    <option name="height" value="1092" />
+    <option name="x" value="1984" />
+    <option name="y" value="45" />
+    <option name="width" value="1217" />
+    <option name="height" value="1036" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -214,7 +227,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="64" y="-11" width="1857" height="1092" extended-state="7" />
+    <frame x="1984" y="45" width="1217" height="1036" extended-state="7" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3144033" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -369,10 +382,22 @@
     <entry file="file://$PROJECT_DIR$/../../../downloads/kubra/2generator_v2.py" />
     <entry file="file://$PROJECT_DIR$/fine_tune.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="276">
-          <caret line="364" column="38" lean-forward="false" selection-start-line="364" selection-start-column="38" selection-end-line="364" selection-end-column="38" />
+        <state relative-caret-position="251">
+          <caret line="54" column="59" lean-forward="true" selection-start-line="54" selection-start-column="59" selection-end-line="54" selection-end-column="59" />
           <folding>
             <element signature="e#0#47#0" expanded="true" />
+            <element signature="e#3582#3925#0" expanded="false" />
+            <element signature="e#3957#4129#0" expanded="false" />
+            <element signature="e#4155#4865#0" expanded="false" />
+            <element signature="e#4892#5712#0" expanded="false" />
+            <element signature="e#5747#6714#0" expanded="false" />
+            <element signature="e#8523#9435#0" expanded="false" />
+            <element signature="e#9486#11195#0" expanded="false" />
+            <element signature="e#11248#12993#0" expanded="false" />
+            <element signature="e#13043#13753#0" expanded="false" />
+            <element signature="e#13813#18255#0" expanded="false" />
+            <element signature="e#18437#20289#0" expanded="false" />
+            <element signature="e#21363#22094#0" expanded="false" />
           </folding>
         </state>
       </provider>
