@@ -104,6 +104,7 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
         multi_coeff = [1]
         single_coeff = [1]
     elif algo is 'cheng':
+        print('Cheng')
         KL = True
         cheng = True
         cross_loss = 0.
@@ -116,6 +117,7 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
         #cross_loss = 1.
         #multi_loss = 0.
 
+    device = torch.device("cuda" if use_gpu else "cpu")
     # print('Multi_coef is ' + str(multi_coeff))
     result_log = []
     since = time.time()
@@ -125,42 +127,27 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
     best_rmse = 100.0
 
     if (regression and learn_a) or poisson or binomial:
-        if use_gpu:
-            a_vec = Variable(torch.randn(numOut, 1).cuda(), requires_grad=True)
-        else:
-            a_vec = Variable(torch.randn(numOut, 1), requires_grad=True)
+        a_vec = Variable(torch.randn(numOut, 1), requires_grad=True).to(device)
         params = optimizer.param_groups
         params[0]['params'].append(a_vec)
         optimizer.param_groups = params
         # print(optimizer_ft.param_groups)
     elif (regression):
-        if use_gpu:
-            a_vec = Variable(torch.arange(0, numOut).cuda().view(numOut, 1))
-        else:
-            a_vec = Variable(torch.arange(0, numOut).view(numOut, 1))
+        a_vec = Variable(torch.arange(0, numOut).view(numOut, 1)).to(device)
 
     if poisson:
         log_j_fact = np.log(np.asarray([math.factorial(j) for j in range(numOut)]))
-        if use_gpu:
-            ones_vec = Variable(torch.ones(numOut).type(torch.FloatTensor).cuda().view(1, numOut))
-            j_vec = Variable(torch.arange(0, numOut).type(torch.FloatTensor).cuda().view(1, numOut))
-            log_j_fact = Variable(torch.from_numpy(log_j_fact).type(torch.FloatTensor).cuda().view(1, numOut))
-        else:
-            ones_vec = Variable(torch.ones(numOut).type(torch.FloatTensor).view(1, numOut))
-            j_vec = Variable(torch.arange(0, numOut).type(torch.FloatTensor).view(1, numOut))
-            log_j_fact = Variable(torch.from_numpy(log_j_fact).type(torch.FloatTensor).view(1, numOut))
+        ones_vec = Variable(torch.ones(numOut).type(torch.FloatTensor).view(1, numOut)).to(device)
+        j_vec = Variable(torch.arange(0, numOut).type(torch.FloatTensor).view(1, numOut)).to(device)
+        log_j_fact = Variable(torch.from_numpy(log_j_fact).type(torch.FloatTensor).view(1, numOut)).to(device)
 
     if binomial:
         log_j_binom = np.log(np.asarray([math.factorial(numOut - 1) /
                                          (math.factorial(j) * math.factorial(numOut - 1 - j)) for j in range(numOut)]))
-        if use_gpu:
-            ones_vec = Variable(torch.ones(numOut).type(torch.FloatTensor).cuda().view(1, numOut))
-            j_vec = Variable(torch.arange(0, numOut).type(torch.FloatTensor).cuda().view(1, numOut))
-            log_j_binom = Variable(torch.from_numpy(log_j_binom).type(torch.FloatTensor).cuda().view(1, numOut))
-        else:
-            ones_vec = Variable(torch.ones(numOut).type(torch.FloatTensor).view(1, numOut))
-            j_vec = Variable(torch.arange(0, numOut).type(torch.FloatTensor).view(1, numOut))
-            log_j_binom = Variable(torch.from_numpy(log_j_binom).type(torch.FloatTensor).view(1, numOut))
+
+        ones_vec = Variable(torch.ones(numOut).type(torch.FloatTensor).view(1, numOut)).to(device)
+        j_vec = Variable(torch.arange(0, numOut).type(torch.FloatTensor).view(1, numOut)).to(device)
+        log_j_binom = Variable(torch.from_numpy(log_j_binom).type(torch.FloatTensor).view(1, numOut)).to(device)
 
     if weighted_softmax:
         '''Accumulators = [[]]* numOut
@@ -177,10 +164,7 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
             # A = np.zeros((numOut, numOut-1))
             for k in range(numOut - 1):
                 Accumulators[np.maximum(0, l - k):np.minimum(numOut, l + k + 1), l * (numOut - 1) + k] = 1
-        if use_gpu:
-            Accumulators = Variable(torch.from_numpy(Accumulators).type(torch.FloatTensor).cuda())
-        else:
-            Accumulators = Variable(torch.from_numpy(Accumulators).type(torch.FloatTensor))
+        Accumulators = Variable(torch.from_numpy(Accumulators).type(torch.FloatTensor)).to(device)
 
     for epoch in range(num_epochs):
         if (write_log):
@@ -212,11 +196,7 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
                 #    labels = (labels.type(torch.FloatTensor)-(numOut-1)/2.)/(numOut-1.)*2.
 
                 # wrap them in Variable
-                if use_gpu:
-                    inputs, labels = Variable(inputs.cuda()), \
-                                     Variable(labels.cuda())
-                else:
-                    inputs, labels = Variable(inputs), Variable(labels)
+                inputs, labels = Variable(inputs).to(device), Variable(labels).to(device)
 
                 # zero the parameter gradients
                 optimizer.zero_grad()
@@ -231,10 +211,7 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
                 loss = 0.0
                 if (regression):
                     # print(labels)
-                    if use_gpu:
-                        labels = labels.type(torch.FloatTensor).cuda()
-                    else:
-                        labels = labels.type(torch.FloatTensor)
+                    labels = labels.type(torch.FloatTensor).to(device)
                     softmax_step = torch.nn.Softmax()
                     outputs = softmax_step(outputs)
 
@@ -268,10 +245,7 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
                                 # print('KL divergence labels ' + str(label_multi))
                             labels_multi.append(label_multi)
 
-                        if use_gpu:
-                            labelsv = Variable(torch.FloatTensor(labels_multi).cuda()).view(-1, numOut)
-                        else:
-                            labelsv = Variable(torch.FloatTensor(labels_multi)).view(-1, numOut)
+                        labelsv = Variable(torch.FloatTensor(labels_multi)).view(-1, numOut).to(device)
 
                     softplus_step = torch.nn.Softplus()
                     preds = torch.mm(outputs, a_vec)
@@ -304,10 +278,7 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
                                 # print('KL divergence labels ' + str(label_multi))
                             labels_multi.append(label_multi)
 
-                        if use_gpu:
-                            labelsv = Variable(torch.FloatTensor(labels_multi).cuda()).view(-1, numOut)
-                        else:
-                            labelsv = Variable(torch.FloatTensor(labels_multi)).view(-1, numOut)
+                        labelsv = Variable(torch.FloatTensor(labels_multi)).view(-1, numOut).to(device)
 
                     sigmoid_step = torch.nn.Sigmoid()
                     preds = torch.mm(outputs, a_vec)
@@ -334,10 +305,7 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
                             label_multi[:label + 1] = 1
                             labels_multi.append(label_multi)
 
-                        if use_gpu:
-                            labelsv = Variable(torch.FloatTensor(labels_multi).cuda()).view(-1, numOut)
-                        else:
-                            labelsv = Variable(torch.FloatTensor(labels_multi)).view(-1, numOut)
+                        labelsv = Variable(torch.FloatTensor(labels_multi)).view(-1, numOut).to(device)
 
                         criterion = nn.MultiLabelSoftMarginLoss()
                         loss = criterion(outputs, labelsv)
@@ -356,11 +324,7 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
                                 label_multi[label * (numOut - 1):(label + 1) * (numOut - 1)] = 1
                                 labels_multi.append(label_multi)
 
-                            if use_gpu:
-                                labelsv = Variable(torch.FloatTensor(labels_multi).cuda()).view(-1,
-                                                                                                numOut * (numOut - 1))
-                            else:
-                                labelsv = Variable(torch.FloatTensor(labels_multi)).view(-1, numOut * (numOut - 1))
+                            labelsv = Variable(torch.FloatTensor(labels_multi)).view(-1, numOut * (numOut - 1)).to(device)
 
                             outputs_accumulated_soft = torch.mm(outputs_soft, Accumulators)
                             outputs_log_softmax = torch.log(outputs_accumulated_soft)
@@ -390,10 +354,7 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
                                         #print('KL divergence labels ' + str(label_multi))'''
                                     labels_multi.append(single_coeff[label, :])
 
-                                if use_gpu:
-                                    labelsv = Variable(torch.FloatTensor(labels_multi).cuda()).view(-1, numOut)
-                                else:
-                                    labelsv = Variable(torch.FloatTensor(labels_multi)).view(-1, numOut)
+                                labelsv = Variable(torch.FloatTensor(labels_multi)).view(-1, numOut).to(device)
 
                                 log_soft = nn.LogSoftmax()
                                 outputs_log_softmax = log_soft(outputs)
@@ -431,10 +392,7 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
                                     #print('KL divergence labels ' + str(label_multi))'''
                                 labels_multi.append(single_coeff[label, :])
 
-                            if use_gpu:
-                                labelsv = Variable(torch.FloatTensor(labels_multi).cuda()).view(-1, numOut)
-                            else:
-                                labelsv = Variable(torch.FloatTensor(labels_multi)).view(-1, numOut)
+                            labelsv = Variable(torch.FloatTensor(labels_multi)).view(-1, numOut).to(device)
 
                             log_soft = nn.LogSoftmax()
                             outputs_log_softmax = log_soft(outputs)
@@ -519,7 +477,7 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
                     optimizer.step()
 
                 # statistics
-                running_loss += loss.data[0]
+                running_loss += loss.item()
 
                 if (regression or poisson or binomial or cheng):
                     if cheng:
@@ -690,7 +648,7 @@ def train_model_balanced(model, criterion, optimizer, lr_scheduler, dset_loaders
                 optimizer.step()
 
                 # statistics
-                running_loss += loss.data[0]
+                running_loss += loss.item()
                 running_corrects += torch.sum(preds == labels.data)
                 running_cir1 += torch.sum(torch.abs(preds - labels.data) <= 1)
 
@@ -749,7 +707,7 @@ def train_model_balanced(model, criterion, optimizer, lr_scheduler, dset_loaders
                 loss = criterion(outputs, labelsv)
 
             # statistics
-            running_loss += loss.data[0]
+            running_loss += loss.item()
             running_corrects += torch.sum(preds == labels.data)
             running_cir1 += torch.sum(torch.abs(preds - labels.data) <= 1)
 
@@ -856,7 +814,7 @@ def train_model_both(model, criterion, optimizer, lr_scheduler, dset_loaders_rea
                 optimizer.step()
 
                 # statistics
-                running_loss += loss.data[0]
+                running_loss += loss.item()
                 running_corrects += torch.sum(preds == labels.data)
                 running_cir1 += torch.sum(torch.abs(preds - labels.data) <= 1)
 
@@ -916,7 +874,7 @@ def train_model_both(model, criterion, optimizer, lr_scheduler, dset_loaders_rea
                     loss = criterion(outputs, labelsv)
 
                 # statistics
-                running_loss += loss.data[0]
+                running_loss += loss.item()
                 running_corrects += torch.sum(preds == labels.data)
                 running_cir1 += torch.sum(torch.abs(preds - labels.data) <= 1)
             if (test_count == 1):
