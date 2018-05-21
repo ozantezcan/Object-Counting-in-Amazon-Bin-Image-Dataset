@@ -21,13 +21,11 @@
       <file leaf-file-name="fine_tune.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/fine_tune.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="316">
-              <caret line="91" column="25" lean-forward="false" selection-start-line="91" selection-start-column="18" selection-end-line="91" selection-end-column="25" />
+            <state relative-caret-position="2821">
+              <caret line="478" column="35" lean-forward="false" selection-start-line="478" selection-start-column="35" selection-end-line="478" selection-end-column="35" />
               <folding>
                 <element signature="e#0#47#0" expanded="true" />
-                <element signature="e#3661#3897#0" expanded="false" />
-                <element signature="e#4023#4409#0" expanded="false" />
-                <element signature="e#19040#19771#0" expanded="false" />
+                <element signature="e#19162#19893#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -36,7 +34,7 @@
       <file leaf-file-name="stats.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/stats.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-138">
+            <state relative-caret-position="126">
               <caret line="7" column="9" lean-forward="false" selection-start-line="7" selection-start-column="9" selection-end-line="7" selection-end-column="9" />
               <folding />
             </state>
@@ -46,7 +44,7 @@
       <file leaf-file-name="data.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/data.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="198">
+            <state relative-caret-position="162">
               <caret line="11" column="30" lean-forward="false" selection-start-line="11" selection-start-column="30" selection-end-line="11" selection-end-column="30" />
               <folding>
                 <element signature="e#0#12#0" expanded="true" />
@@ -59,7 +57,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>train_loader</find>
       <find>transforms.</find>
       <find>target_tra</find>
       <find>input_tr</find>
@@ -89,6 +86,7 @@
       <find>loss.da</find>
       <find>use_gpu</find>
       <find>writer</find>
+      <find>sigmoid</find>
     </findStrings>
     <replaceStrings>
       <replace>/n</replace>
@@ -110,10 +108,10 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="65" />
-    <option name="y" value="-4" />
-    <option name="width" value="1855" />
-    <option name="height" value="1084" />
+    <option name="x" value="64" />
+    <option name="y" value="-11" />
+    <option name="width" value="1857" />
+    <option name="height" value="1092" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -240,7 +238,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="65" y="-4" width="1855" height="1084" extended-state="7" />
+    <frame x="64" y="-11" width="1857" height="1092" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3144033" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -387,7 +385,7 @@
     <entry file="file://$PROJECT_DIR$/../../../downloads/kubra/2generator_v2.py" />
     <entry file="file://$PROJECT_DIR$/data.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="198">
+        <state relative-caret-position="162">
           <caret line="11" column="30" lean-forward="false" selection-start-line="11" selection-start-column="30" selection-end-line="11" selection-end-column="30" />
           <folding>
             <element signature="e#0#12#0" expanded="true" />
@@ -397,7 +395,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/stats.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-138">
+        <state relative-caret-position="126">
           <caret line="7" column="9" lean-forward="false" selection-start-line="7" selection-start-column="9" selection-end-line="7" selection-end-column="9" />
           <folding />
         </state>
@@ -405,13 +403,11 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/fine_tune.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="316">
-          <caret line="91" column="25" lean-forward="false" selection-start-line="91" selection-start-column="18" selection-end-line="91" selection-end-column="25" />
+        <state relative-caret-position="2821">
+          <caret line="478" column="35" lean-forward="false" selection-start-line="478" selection-start-column="35" selection-end-line="478" selection-end-column="35" />
           <folding>
             <element signature="e#0#47#0" expanded="true" />
-            <element signature="e#3661#3897#0" expanded="false" />
-            <element signature="e#4023#4409#0" expanded="false" />
-            <element signature="e#19040#19771#0" expanded="false" />
+            <element signature="e#19162#19893#0" expanded="false" />
           </folding>
         </state>
       </provider>

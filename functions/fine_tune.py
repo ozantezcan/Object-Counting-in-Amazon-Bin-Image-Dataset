@@ -109,8 +109,8 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
         cheng = True
         cross_loss = 0.
         multi_loss = 0.
-        multi_coeff = [1]
-        single_coeff = [1]
+        #multi_coeff = [1]
+        #single_coeff = [1]
     elif algo is 'weighted_softmax':
         weighted_softmax = True
         KL = True
@@ -134,7 +134,15 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
         # print(optimizer_ft.param_groups)
     elif (regression):
         a_vec = Variable(torch.arange(0, numOut).view(numOut, 1)).to(device)
-
+    
+    if cheng:
+        for k in range(multi_coeff.shape[0]):
+            temp = multi_coeff[k,:]
+            temp= temp/np.sum(temp)
+            temp = np.cumsum(temp[::-1])
+            multi_coeff[k,:] = temp[::-1]
+        print('Loss is cheng, multi_coeff is ' + str(multi_coeff))
+            
     if poisson:
         log_j_fact = np.log(np.asarray([math.factorial(j) for j in range(numOut)]))
         ones_vec = Variable(torch.ones(numOut).type(torch.FloatTensor).view(1, numOut)).to(device)
@@ -297,18 +305,13 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
                     loss = criterion(outputs_log_softmax, labelsv)
 
                 elif cheng:
-                    if KL:
-                        # print('KL div')
-                        labels_multi = []
-                        for label in labels.data:
-                            label_multi = np.zeros(numOut)
-                            label_multi[:label + 1] = 1
-                            labels_multi.append(label_multi)
-
-                        labelsv = Variable(torch.FloatTensor(labels_multi)).view(-1, numOut).to(device)
-
-                        criterion = nn.MultiLabelSoftMarginLoss()
-                        loss = criterion(outputs, labelsv)
+                    labels_multi = []
+                    for label in labels.data:
+                        labels_multi.append(multi_coeff[label, :])
+                    labelsv = Variable(torch.FloatTensor(labels_multi)).view(-1, numOut).to(device)
+                    criterion = nn.MultiLabelSoftMarginLoss()
+                    loss = criterion(outputs, labelsv)
+                    
                 elif weighted_softmax:
                     _, preds = torch.max(outputs.data, 1)
                     #print('Multi loss is ' + str(multi_loss))
@@ -481,7 +484,7 @@ def train_model(model, optimizer, lr_scheduler, dset_loaders, \
 
                 if (regression or poisson or binomial or cheng):
                     if cheng:
-                        preds_numpy = (outputs.data.cpu().numpy() > 0.5).astype(np.int)
+                        preds_numpy = (outputs.data.cpu().numpy() > 0.0).astype(np.int)
                         # print(np.cumprod(preds_numpy,axis = 1))
                         # print(np.sum(np.cumprod(preds_numpy,axis = 1), axis=1))
                         preds_numpy = (np.sum(np.cumprod(preds_numpy, axis=1), axis=1) - 1).reshape(-1, 1)
