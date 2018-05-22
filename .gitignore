@@ -1,4 +1,5 @@
 saved_models
 .ipynb_checkpoints
 .~lock.logs.xlsx#
+.obsolete
 Loss-Tests/.ipynb_checkpoints

@@ -1,4 +1,0 @@
-18_01_20 	=> Small Network (4, 4, 4), No dropout, ReLu, data range = -5:5, 9 classes, Noise = 0.1
-18_01_31 	=> Small Network (4, 4, 4), No dropout, ReLu, data range = -5:5, 9 classes, Noise = 0.0
-18_01_31_2 	=> Big Network (4, 4, 8, 8, 16, 16, 32, 16, 16), No dropout, ReLu, data range = -5:5, 9 classes, Noise = 0.0
-
