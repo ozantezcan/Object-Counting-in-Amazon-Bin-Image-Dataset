@@ -21,8 +21,8 @@
       <file leaf-file-name="fine_tune.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/fine_tune.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2883">
-              <caret line="222" column="57" lean-forward="false" selection-start-line="222" selection-start-column="57" selection-end-line="222" selection-end-column="57" />
+            <state relative-caret-position="4060">
+              <caret line="587" column="82" lean-forward="true" selection-start-line="587" selection-start-column="82" selection-end-line="587" selection-end-column="82" />
               <folding>
                 <element signature="e#0#47#0" expanded="true" />
               </folding>
@@ -56,7 +56,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>target_tra</find>
       <find>input_tr</find>
       <find>ArrayToTensor</find>
       <find>Scale</find>
@@ -86,6 +85,7 @@
       <find>sigmoid</find>
       <find>print</find>
       <find>log_soft</find>
+      <find>regression</find>
     </findStrings>
     <replaceStrings>
       <replace>/n</replace>
@@ -237,7 +237,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="64" y="-11" width="1857" height="1092" extended-state="6" />
+    <frame x="64" y="-11" width="1857" height="1092" extended-state="7" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3144033" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -392,8 +392,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/fine_tune.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2883">
-          <caret line="222" column="57" lean-forward="false" selection-start-line="222" selection-start-column="57" selection-end-line="222" selection-end-column="57" />
+        <state relative-caret-position="4060">
+          <caret line="587" column="82" lean-forward="true" selection-start-line="587" selection-start-column="82" selection-end-line="587" selection-end-column="82" />
           <folding>
             <element signature="e#0#47#0" expanded="true" />
           </folding>

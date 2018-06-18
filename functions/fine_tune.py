@@ -62,7 +62,8 @@ def train_model(model, optim_str, lr_scheduler, dset_loaders, \
                 multi_coeff=[1, 1, 1], single_coeff=[1, 1, 1], KL=False,
                 poisson=False, binomial=False, cheng=False, algo=None,
                 mae_loss=False, weighted_softmax=False, test=False,
-               momentum = 0, weight_decay = 0):
+               momentum = 0, weight_decay = 0, fix_a = False, cheng_lambda = 0,
+               weighted_softmax_2 = False, softmax_matrices = []):
 
 
     if algo is 'KL':
@@ -70,7 +71,6 @@ def train_model(model, optim_str, lr_scheduler, dset_loaders, \
         cross_loss = 1.
         multi_loss = 0.
     elif algo is 'softmax':
-        KL = False
         cross_loss = 1.
         multi_loss = 0.
     elif algo is 'sigmoid':
@@ -78,23 +78,19 @@ def train_model(model, optim_str, lr_scheduler, dset_loaders, \
         multi_loss = 1.
     elif algo is 'learn_a':
         learn_a = True
-        regression = True
         cross_loss = 1.
         multi_loss = 0.
     elif algo is 'fix_a':
-        learn_a = False
-        regression = True
+        fix_a = True
         cross_loss = 1.
         multi_loss = 0.
     elif algo is 'learn_a_mae':
         learn_a = True
-        regression = True
         cross_loss = 1.
         multi_loss = 0.
         mae_loss = True
     elif algo is 'fix_a_mae':
-        learn_a = False
-        regression = True
+        fix_a = True
         cross_loss = 1.
         multi_loss = 0.
         mae_loss = True
@@ -118,11 +114,23 @@ def train_model(model, optim_str, lr_scheduler, dset_loaders, \
         cheng = True
         cross_loss = 0.
         multi_loss = 0.
+    elif algo is 'weighted_softmax_2':
+        weighted_softmax_2 = True
+        KL = True
     elif algo is 'weighted_softmax':
         weighted_softmax = True
         KL = True
+    elif algo is 'regression':
+        regression = True
+        cross_loss = 1.
+        multi_loss = 0.
+    elif algo is 'regression_mae':
+        regression = True
+        cross_loss = 1.
+        multi_loss = 0.
+        mae_loss = True
 
-        
+
     device = torch.device("cuda" if use_gpu else "cpu")
     result_log = []
     since = time.time()
@@ -131,13 +139,16 @@ def train_model(model, optim_str, lr_scheduler, dset_loaders, \
     best_model = model
     best_rmse = 100.0
     
-    if poisson or binomial:
-        model.fc = nn.Linear(model.fc.in_features, 1).to(device)
+
         
-    if regression:
-        model.fc = nn.Sequential(model.fc, nn.Linear(model.fc.out_features, 1, bias = False)).to(device)
-        if not learn_a:
-            model.fc[1].weight = torch.nn.Parameter(torch.from_numpy(np.arange(0, numOut)).type(torch.FloatTensor).view(1, -1).to(device), False)
+    if learn_a or fix_a:
+        model.fc = nn.Sequential(model.fc, nn.Softmax(dim=1), nn.Linear(model.fc.out_features, 1, bias = False)).to(device)
+        if fix_a:
+            model.fc[2].weight = torch.nn.Parameter(torch.from_numpy(np.arange(0, numOut)).type(torch.FloatTensor).view(1, -1).to(device), False)
+
+    if poisson or binomial or regression:
+        model.fc = nn.Linear(model.fc.in_features, 1).to(device)
+        #learn_a = True
 
     if cheng:
         for k in range(multi_coeff.shape[0]):
@@ -145,6 +156,10 @@ def train_model(model, optim_str, lr_scheduler, dset_loaders, \
             temp= temp/np.sum(temp)
             temp = np.cumsum(temp[::-1])
             multi_coeff[k,:] = temp[::-1]
+        diff_arr = np.eye(numOut)
+        for k in range(numOut-1):
+            diff_arr[k+1, k] = -1
+        diff_arr = torch.from_numpy(diff_arr).type(torch.FloatTensor).to(device)
         #print('Loss is cheng, multi_coeff is ' + str(multi_coeff))
             
     if poisson:
@@ -173,7 +188,7 @@ def train_model(model, optim_str, lr_scheduler, dset_loaders, \
         optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=init_lr, weight_decay=weight_decay)
     elif(optim_str=='sgd'):
         optimizer = optim.SGD(filter(lambda p: p.requires_grad, model.parameters()), lr=init_lr, momentum=momentum) #, weight_decay=weight_decay)
-    #print('Model parameters are ' + str(model.children))
+    #print('Model is  ' + str(model))
     #print('Requires grad is ' + str(model.reg.bias.requires_grad))
     for epoch in range(num_epochs):
         if (write_log):
@@ -217,20 +232,14 @@ def train_model(model, optim_str, lr_scheduler, dset_loaders, \
 
                 loss = torch.Tensor(1)
                 loss = 0.0
-                if (regression):
+                if learn_a or fix_a:
                     # print(labels)
                     labels = labels.type(torch.FloatTensor).to(device).view(-1,1)
-                    softmax_step = torch.nn.Softmax(dim=1)
-                    outputs = softmax_step(outputs)
-                    
-                    # print(a_vec)
-                    # print(outputs)
+
                     if (mae_loss):
                         criterion = torch.nn.L1Loss()
                     else:
                         criterion = torch.nn.MSELoss()
-                    # print('Preds is ' + str(preds))
-                    # print(labels)
 
                     if learn_a:
                         sigmoid_step = torch.nn.Sigmoid()
@@ -238,9 +247,8 @@ def train_model(model, optim_str, lr_scheduler, dset_loaders, \
                     else:
                         preds = outputs
 
-                    loss += criterion(outputs, labels)
+                    loss += criterion(preds, labels)
                 elif poisson:
-                    # print(labels)
                     if KL:
                         # print('KL div')
                         labels_multi = []
@@ -276,7 +284,6 @@ def train_model(model, optim_str, lr_scheduler, dset_loaders, \
                     loss = criterion(outputs_log_softmax, labelsv)
 
                 elif binomial:
-                    # print(labels)
                     if KL:
                         # print('KL div')
                         labels_multi = []
@@ -292,12 +299,12 @@ def train_model(model, optim_str, lr_scheduler, dset_loaders, \
 
                         labelsv = torch.FloatTensor(labels_multi).view(-1, numOut).to(device)
 
+
+
                     sigmoid_step = torch.nn.Sigmoid()
-                    preds = sigmoid_step(outputs)
-                    # print(preds.data.cpu().numpy())
+                    preds = ((sigmoid_step(outputs) - 0.5) * 0.99) + .5
                     outputs = torch.mm(preds, ones_vec)
                     outputs = j_vec * torch.log(outputs) + (numOut - 1 - j_vec) * torch.log(1 - outputs) + log_j_binom
-                    # print(outputs)
 
                     log_soft = nn.LogSoftmax(dim = 1)
                     outputs_log_softmax = log_soft(outputs)
@@ -313,8 +320,15 @@ def train_model(model, optim_str, lr_scheduler, dset_loaders, \
                         labels_multi.append(multi_coeff[label, :])
                     labelsv = torch.FloatTensor(labels_multi).view(-1, numOut).to(device)
                     criterion = nn.MultiLabelSoftMarginLoss()
-                    loss = criterion(outputs, labelsv)
-                    
+                    loss += criterion(outputs, labelsv)
+
+                    if cheng_lambda > 0:
+                        sigmoid_step = torch.nn.Sigmoid()
+                        cdf = sigmoid_step(outputs)
+                        pmf = (cdf @ diff_arr) / .2
+                        criterion = nn.CrossEntropyLoss()
+                        loss += cheng_lambda * criterion(outputs, labels)
+
                 elif weighted_softmax:
                     _, preds = torch.max(outputs.data, 1)
                     #print('Multi loss is ' + str(multi_loss))
@@ -361,6 +375,18 @@ def train_model(model, optim_str, lr_scheduler, dset_loaders, \
                                 loss += cross_loss * criterion(outputs, labels)
 
 
+                elif weighted_softmax_2:
+
+                    #print('Multi loss is ' + str(multi_loss))
+                    #print('Size of the outputs is ' + str(outputs.size()))
+                    criterion = nn.CrossEntropyLoss()
+                    _, preds = torch.max(outputs.data, 1)
+
+                    for coeff, matrice in softmax_matrices:
+                        weighted_out = torch.mm(outputs, matrice)
+                        loss += criterion(weighted_out, labels)
+
+
                 else:
                     _, preds = torch.max(outputs.data, 1)
                     if cross_loss > 0.:
@@ -393,6 +419,7 @@ def train_model(model, optim_str, lr_scheduler, dset_loaders, \
                 if phase == 'train':
                     batch_count += 1
                     if (np.mod(batch_count, num_log) == 0):
+
                         batch_acc = float(running_corrects) / float(batch_count * batch_size)
                         batch_cir1 = float(running_cir1) / float(batch_count * batch_size)
                         batch_rmse = np.sqrt(float(running_mse) / float(batch_count * batch_size))
@@ -405,19 +432,30 @@ def train_model(model, optim_str, lr_scheduler, dset_loaders, \
                                   .format(batch_count, len(dset_loaders['train']),
                                           batch_acc, batch_cir1, batch_rmse, batch_mae))
                             '''
-                            if(regression):
+                            if(learn_a or fix_a):
                                 print('Weights are ' + str(model.fc[1].weight) + ', bias is ' + str(model.fc[1].bias))
                             else: 
                                 print('Weights are ' + str(model.fc.weight) + ', bias is ' + str(model.fc.bias))
                             '''
+                        ''' TO BE DELETED '''
+                        
+                        if cheng_lambda > 0:
+                            cdf_np = cdf[5,:].data.to('cpu').numpy()
+                            print('CDF is ' + str(np.round(cdf_np, decimals = 2)))
+                            pmf_np = pmf[5,:].data.to('cpu').numpy()
+                            #print('PMF before softmax is ' + str(np.round(pmf_np, decimals = 2)))
+                            pmf_np = np.exp(pmf_np)
+                            pmf_np = pmf_np / np.sum(pmf_np)
+                            print('PMF is ' + str(np.round(pmf_np, decimals = 2)))
 
+                        ''' TO BE DELETED '''
                     loss.backward()
                     optimizer.step()
 
                 # statistics
                 running_loss += loss.item()
 
-                if (regression or poisson or binomial or cheng):
+                if (learn_a or fix_a or poisson or binomial or cheng):
                     if cheng:
                         preds_numpy = (outputs.data.cpu().numpy() > 0.0).astype(np.int)
                         preds_numpy = (np.sum(np.cumprod(preds_numpy, axis=1), axis=1) - 1).reshape(-1, 1)
@@ -438,7 +476,6 @@ def train_model(model, optim_str, lr_scheduler, dset_loaders, \
                     running_mse += np.sum((preds_numpy - labels_numpy) * (preds_numpy - labels_numpy))
                     running_mae += np.sum(np.abs(preds_numpy - labels_numpy))
                     running_corrects += np.sum(np.abs(preds_numpy - labels_numpy) < .3)
-
                 else:
                     running_cir1 += torch.sum(torch.abs(preds - labels.data) <= 1)
                     running_corrects += torch.sum(preds == labels.data)
@@ -450,9 +487,6 @@ def train_model(model, optim_str, lr_scheduler, dset_loaders, \
             epoch_cir1 = float(running_cir1) / float(dset_sizes[phase])
             epoch_rmse = np.sqrt((float(running_mse) / float(dset_sizes[phase])))
             epoch_mae = float(running_mae) / float(dset_sizes[phase])
-
-            print('Epoch is ' + str(epoch))
-            print('Epoch loss is ' + str(epoch_loss))
 
             writer.add_scalar(phase + ' loss', epoch_loss, epoch)
             writer.add_scalar(phase + ' accuracy', epoch_acc, epoch)
